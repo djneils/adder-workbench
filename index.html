@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adder Workbench</title>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --panel: #ffffff;
+    --panel-2: #eef2f6;
+    --line: #d5dce5;
+    --ink: #1b2436;
+    --ink-2: #55617a;
+    --navy: #1e3a5f;
+    --teal: #0f766e;
+    --teal-soft: #d5efec;
+    --amber: #d97706;
+    --amber-soft: #fbe8c6;
+    --wire-off: #8b97a8;
+    --wire-on: #d97706;
+    --gate-fill: #ffffff;
+    --gate-stroke: #1e3a5f;
+    --group-fill: rgba(15, 118, 110, 0.06);
+    --group-stroke: #0f766e;
+    --select: #2563eb;
+    --ok: #15803d;
+    --ok-soft: #dcf5e3;
+    --grid: #e3e8ef;
+    --shadow: 0 1px 2px rgba(20, 30, 50, 0.08), 0 4px 14px rgba(20, 30, 50, 0.06);
+    --radius: 8px;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #121826; --panel: #1a2233; --panel-2: #222c40; --line: #33405a;
+      --ink: #e6ebf3; --ink-2: #9aa7bd; --navy: #9db7dc; --teal: #3fb8ac; --teal-soft: #163b39;
+      --amber: #f5a524; --amber-soft: #4a3410; --wire-off: #66748c; --wire-on: #f5a524;
+      --gate-fill: #1f2a3f; --gate-stroke: #c7d5ea; --group-fill: rgba(63, 184, 172, 0.08);
+      --group-stroke: #3fb8ac; --select: #60a5fa; --ok: #4ade80; --ok-soft: #14361f; --grid: #1f2839;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #121826; --panel: #1a2233; --panel-2: #222c40; --line: #33405a;
+    --ink: #e6ebf3; --ink-2: #9aa7bd; --navy: #9db7dc; --teal: #3fb8ac; --teal-soft: #163b39;
+    --amber: #f5a524; --amber-soft: #4a3410; --wire-off: #66748c; --wire-on: #f5a524;
+    --gate-fill: #1f2a3f; --gate-stroke: #c7d5ea; --group-fill: rgba(63, 184, 172, 0.08);
+    --group-stroke: #3fb8ac; --select: #60a5fa; --ok: #4ade80; --ok-soft: #14361f; --grid: #1f2839;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); font-size: 14px; line-height: 1.45;
+  }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--select); outline-offset: 2px;
+  }
+
+  .app {
+    height: 100%; display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 220px 1fr 340px;
+    grid-template-areas: "head head head" "left canvas right";
+    gap: 10px; padding: 10px 16px; padding-block: 10px;
+  }
+  header {
+    grid-area: head; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 8px 14px; box-shadow: var(--shadow);
+  }
+  header h1 { font-size: 16px; white-space: nowrap; margin: 0; font-weight: 650; letter-spacing: 0.01em; color: var(--navy); }
+  header h1 span { color: var(--teal); }
+  header .spacer { flex: 1; }
+  .ctl { display: flex; align-items: center; gap: 6px; }
+  .ctl label { color: var(--ink-2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  select, input[type="text"] {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px;
+  }
+  .btn {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px;
+    padding: 6px 10px; font-weight: 500; white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--teal); }
+  .btn.primary { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.danger:hover { border-color: #c2410c; color: #c2410c; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg-btn { background: var(--panel-2); border: none; padding: 6px 12px; font-weight: 600; color: var(--ink-2); }
+  .seg-btn + .seg-btn { border-left: 1px solid var(--line); }
+  .seg-btn.active { background: var(--navy); color: #fff; }
+  :root[data-theme="dark"] .seg-btn.active { color: #121826; }
+
+  /* Ripple mode drawing */
+  .fa-box { fill: var(--gate-fill); stroke: var(--teal); stroke-width: 2.2; }
+  .fa-box.active { stroke: var(--amber); stroke-width: 3.5; }
+  .fa-box.waiting { opacity: 0.45; }
+  .fa-box.peek { cursor: pointer; }
+  .fa-title { fill: var(--teal); font-weight: 700; font-size: 12px; letter-spacing: 0.06em; pointer-events: none; }
+  .fa-sub { fill: var(--ink-2); font-size: 11px; pointer-events: none; }
+  .bit-box { fill: var(--panel-2); stroke: var(--gate-stroke); stroke-width: 2; cursor: pointer; }
+  .bit-box.on { fill: var(--amber-soft); stroke: var(--amber); }
+  .bit-box.ro { cursor: default; }
+  .bit-val { font-family: var(--mono); font-size: 18px; font-weight: 700; fill: var(--ink); pointer-events: none; }
+  .bit-val.on { fill: var(--amber); }
+  .bit-name { font-size: 11px; fill: var(--ink-2); font-weight: 600; pointer-events: none; }
+  .place { font-family: var(--mono); font-size: 12px; fill: var(--ink-2); }
+  .rwire { fill: none; stroke: var(--wire-off); stroke-width: 2.5; }
+  .rwire.on { stroke: var(--wire-on); stroke-width: 3; }
+  .rwire.waiting { stroke-dasharray: 4 4; opacity: 0.5; }
+  .sum-line { font-family: var(--mono); font-size: 15px; fill: var(--ink); }
+  .sum-line b { font-weight: 700; }
+  .addition { font-family: var(--mono); font-size: 15px; line-height: 1.7; white-space: pre; background: var(--panel-2); padding: 10px 12px; border-radius: 6px; overflow-x: auto; }
+  .addition .c { color: var(--amber); }
+  .addition .s { color: var(--teal); font-weight: 700; }
+  .addition .rule { color: var(--ink-2); }
+  .num-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  input[type="number"] { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; width: 100%; font-family: var(--mono); }
+
+  aside {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: auto; padding: 12px;
+  }
+  .left { grid-area: left; }
+  .right { grid-area: right; display: flex; flex-direction: column; gap: 10px; }
+  aside h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2);
+    margin: 0 0 8px; font-weight: 600;
+  }
+  .section + .section { margin-top: 18px; }
+
+  .palette { display: grid; gap: 8px; }
+  .pal-item {
+    display: flex; align-items: center; gap: 10px; text-align: left;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 6px 8px; touch-action: none; user-select: none;
+  }
+  .pal-item:hover { border-color: var(--teal); background: var(--teal-soft); }
+  .pal-item svg { width: 54px; height: 34px; flex: none; }
+  .pal-item b { display: block; font-weight: 600; }
+  .pal-item small { color: var(--ink-2); }
+
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .steps li {
+    display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border-radius: 6px;
+    background: var(--panel-2); border: 1px solid var(--line); font-size: 13px;
+  }
+  .steps li .tick {
+    flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line);
+    display: grid; place-items: center; font-size: 11px; margin-top: 1px;
+  }
+  .steps li.done { background: var(--ok-soft); border-color: transparent; }
+  .steps li.done .tick { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .steps li.next { border-color: var(--amber); }
+  .steps li small { display: block; color: var(--ink-2); }
+  .steps li .step-btn { display: block; margin-top: 6px; padding: 4px 10px; font-size: 12px; }
+
+  .canvas-wrap {
+    grid-area: canvas; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow); overflow: auto; position: relative;
+  }
+  #canvas {
+    display: block; touch-action: none; user-select: none;
+    background-color: var(--panel);
+    background-image: radial-gradient(var(--grid) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  #canvas.fit { width: 100%; height: 100%; }
+  .canvas-wrap:fullscreen { background: var(--panel); padding: 12px; border-radius: 0; }
+  .hint {
+    position: sticky; left: 8px; top: 8px; display: inline-block; z-index: 2;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px;
+    padding: 4px 10px; font-size: 12px; color: var(--ink-2); margin: 8px; pointer-events: none;
+  }
+
+  /* SVG element styling */
+  .gate-body { fill: var(--gate-fill); stroke: var(--gate-stroke); stroke-width: 2.2; }
+  .gate-extra { fill: none; stroke: var(--gate-stroke); stroke-width: 2.2; }
+  .pin { stroke: var(--gate-stroke); stroke-width: 2; }
+  .port { fill: var(--panel); stroke: var(--gate-stroke); stroke-width: 2; cursor: crosshair; }
+  .port.on { fill: var(--amber); stroke: var(--amber); }
+  .port:hover { stroke: var(--select); stroke-width: 3; }
+  .port-hit { fill: transparent; cursor: crosshair; }
+  .node { cursor: grab; }
+  .node.selected .gate-body, .node.selected .io-body { stroke: var(--select); stroke-width: 3; }
+  .io-body { fill: var(--panel-2); stroke: var(--gate-stroke); stroke-width: 2; }
+  .io-body.on { fill: var(--amber-soft); stroke: var(--amber); }
+  .io-label { font-weight: 700; font-size: 16px; fill: var(--ink); font-family: var(--sans); }
+  .io-val { font-family: var(--mono); font-size: 15px; font-weight: 700; fill: var(--ink-2); }
+  .io-val.on { fill: var(--amber); }
+  .gate-name { font-size: 11px; font-weight: 700; fill: var(--gate-stroke); letter-spacing: 0.06em; pointer-events: none; }
+  .expr {
+    font-family: var(--mono); font-size: 12.5px; fill: var(--teal); pointer-events: none;
+    paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round;
+  }
+  .expr.in { fill: var(--ink-2); }
+  .expr.q { fill: #b45309; }
+  .wire { fill: none; stroke: var(--wire-off); stroke-width: 2.5; cursor: pointer; stroke-linejoin: round; }
+  .wire.on { stroke: var(--wire-on); stroke-width: 3; }
+  .wire.selected { stroke: var(--select); stroke-width: 4; }
+  .wire-hit { fill: none; stroke: transparent; stroke-width: 14; cursor: pointer; }
+  .wire.branch { cursor: default; stroke-linejoin: round; }
+  .junction { fill: var(--wire-off); stroke: none; }
+  .junction.on { fill: var(--wire-on); }
+  .junction.edge { fill: var(--panel); stroke: var(--group-stroke); stroke-width: 2.5; cursor: crosshair; }
+  .junction.edge:hover { stroke: var(--select); stroke-width: 3; }
+  .junction.edge.on { fill: var(--amber); stroke: var(--amber); }
+  .wire.temp { stroke: var(--select); stroke-dasharray: 6 4; pointer-events: none; }
+  .group-box { fill: var(--group-fill); stroke: var(--group-stroke); stroke-width: 1.8; stroke-dasharray: 7 5; }
+  .group-box.selected { stroke-width: 3; stroke-dasharray: none; stroke: var(--select); }
+  .group-title { fill: var(--group-stroke); font-weight: 700; font-size: 13px; letter-spacing: 0.04em; cursor: grab; }
+  .group-handle { fill: var(--group-stroke); opacity: 0.12; cursor: grab; }
+  .group-handle:hover { opacity: 0.22; }
+  .group-pin { stroke: var(--group-stroke); stroke-width: 2.5; }
+  .group-pin-label { font-family: var(--mono); font-size: 11px; fill: var(--group-stroke); font-weight: 700; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; }
+  .group-pin-dot { fill: var(--panel); stroke: var(--group-stroke); stroke-width: 2; }
+  .comp-box { fill: var(--gate-fill); stroke: var(--group-stroke); stroke-width: 2.5; cursor: grab; }
+  .comp-box.selected { stroke: var(--select); stroke-width: 3.5; }
+  .comp-title { fill: var(--group-stroke); font-weight: 700; font-size: 13px; letter-spacing: 0.06em; cursor: grab; }
+  .comp-pin-name { font-family: var(--mono); font-size: 12px; font-weight: 700; fill: var(--ink); pointer-events: none; }
+  .marquee { fill: rgba(37, 99, 235, 0.08); stroke: var(--select); stroke-dasharray: 4 3; }
+  .label-editor {
+    position: absolute; z-index: 3; height: 34px; padding: 0 6px; font-weight: 700; font-size: 16px;
+    background: var(--panel); color: var(--ink); border: 2px solid var(--select); border-radius: 6px; box-shadow: var(--shadow);
+  }
+
+  /* Right panel */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+  .tab {
+    background: none; border: none; padding: 6px 10px; color: var(--ink-2); border-bottom: 2px solid transparent;
+    font-weight: 600; font-size: 13px; margin-bottom: -1px;
+  }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  table.tt { border-collapse: collapse; width: 100%; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .tt-wrap { overflow-x: auto; }
+  table.tt th, table.tt td { border: 1px solid var(--line); padding: 4px 7px; text-align: center; white-space: nowrap; }
+  table.tt th { background: var(--panel-2); font-weight: 600; font-family: var(--sans); font-size: 12px; }
+  table.tt th.out, table.tt td.out { background: var(--teal-soft); }
+  table.tt th.mid, table.tt td.mid { color: var(--ink-2); }
+  table.tt tr.current td { outline: 2px solid var(--amber); outline-offset: -2px; font-weight: 700; }
+  table.tt tbody tr { cursor: pointer; }
+  table.tt tbody tr:hover td { background: var(--amber-soft); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px;
+    background: var(--ok-soft); color: var(--ok); font-weight: 600; font-size: 13px; margin: 4px 0;
+  }
+  .note { color: var(--ink-2); font-size: 12.5px; margin: 6px 0; }
+  .eq { font-family: var(--mono); font-size: 13.5px; padding: 6px 8px; background: var(--panel-2); border-radius: 6px; margin: 4px 0; overflow-x: auto; }
+  .eq b { color: var(--teal); }
+  .eq.dim { color: var(--ink-2); }
+  .arith { font-family: var(--mono); font-size: 14px; padding: 8px 10px; border-left: 3px solid var(--amber); background: var(--amber-soft); border-radius: 0 6px 6px 0; margin: 8px 0; }
+  .field { display: grid; gap: 4px; margin: 8px 0; }
+  .field label { font-size: 12px; color: var(--ink-2); }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .check { display: flex; align-items: center; gap: 6px; font-size: 13px; margin: 8px 0; }
+  .kbd { font-family: var(--mono); font-size: 11px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+
+  @media (max-width: 1000px) {
+    .app {
+      grid-template-columns: 1fr; grid-template-rows: auto auto minmax(420px, 60vh) auto;
+      grid-template-areas: "head" "left" "canvas" "right";
+    }
+    .left { max-height: 260px; }
+    .palette { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .wire { transition: stroke 0.15s; }
+  }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Adder <span>Workbench</span></h1>
+    <div class="seg" role="group" aria-label="Mode">
+      <button class="seg-btn active" data-mode="circuit" id="modeCircuit">Circuit</button>
+      <button class="seg-btn" data-mode="ripple" id="modeRipple">Ripple adder</button>
+    </div>
+    <div class="ctl">
+      <select id="notation" title="Notation" aria-label="Notation">
+        <option value="ocr">OCR ∧ ∨ ⊻</option>
+        <option value="words">AND OR XOR</option>
+        <option value="maths">Maths . + ⊕</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <select id="wireStyle" title="Wire style" aria-label="Wire style">
+        <option value="curved">Curved wires</option>
+        <option value="square">Square wires</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <select id="preset" title="Load a circuit" aria-label="Load a circuit">
+        <option value="">Load…</option>
+        <option value="start">Starting point</option>
+        <option value="half">Finished half adder</option>
+        <option value="full">Finished full adder</option>
+        <option value="blank">Empty canvas</option>
+      </select>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="groupBtn" disabled>Group → component</button>
+    <button class="btn" id="abstractBtn" disabled>Abstract: hide gates</button>
+    <button class="btn" id="themeBtn" aria-label="Toggle dark mode">Dark mode</button>
+  </header>
+
+  <aside class="left">
+   <div id="leftRipple" hidden>
+    <div class="section">
+      <h2>Numbers to add</h2>
+      <div class="field"><label for="ripWidth">Word length</label>
+        <select id="ripWidth"><option value="4">4 bits (0–15)</option><option value="8">8 bits (0–255)</option></select></div>
+      <div class="num-row">
+        <div class="field"><label for="ripA">A (denary)</label><input type="number" id="ripA" min="0" max="15" value="0"></div>
+        <div class="field"><label for="ripB">B (denary)</label><input type="number" id="ripB" min="0" max="15" value="0"></div>
+      </div>
+      <div class="row"><button class="btn" id="ripRandom">Random pair</button><button class="btn primary" id="ripAnim">Ripple the carry ▶</button></div>
+      <div class="row" style="margin-top:6px"><button class="btn" id="ripFull">Full screen ⤢</button></div>
+      <p class="note">Or click any bit on the canvas to flip it. Click a full adder box to look inside it with that bit's values.</p>
+    </div>
+    <div class="section">
+      <h2>What to notice</h2>
+      <ol class="steps">
+        <li><span class="tick">1</span><span>Each column is one full adder — the same box you built, copied.<small>Abstraction lets us build a 4-bit adder without redrawing 20 gates.</small></span></li>
+        <li><span class="tick">2</span><span>The carry ripples from right to left.<small>Bit 3 can't settle until bits 0, 1 and 2 have. More bits = slower adder.</small></span></li>
+        <li><span class="tick">3</span><span>Bit 0 has a carry-in of 0.<small>So a half adder would do there — why does the rest need a full adder?</small></span></li>
+        <li><span class="tick">4</span><span>Try 9 + 8 in 4 bits.<small>The final carry out shows the answer no longer fits: overflow.</small></span></li>
+      </ol>
+    </div>
+   </div>
+   <div id="leftCircuit">
+    <div class="section">
+      <h2>Parts (drag or click)</h2>
+      <div class="palette">
+        <button class="pal-item" data-add="INPUT">
+          <svg viewBox="-4 -4 68 42"><rect x="0" y="0" width="44" height="34" rx="6" class="io-body"></rect><text x="22" y="22" text-anchor="middle" class="io-label">A</text><line x1="44" y1="17" x2="62" y2="17" class="pin"></line></svg>
+          <span><b>Input</b><small>Click to toggle 0 / 1</small></span>
+        </button>
+        <button class="pal-item" data-add="AND">
+          <svg viewBox="-24 -4 110 58"><line x1="-20" y1="12" x2="0" y2="12" class="pin"></line><line x1="-20" y1="38" x2="0" y2="38" class="pin"></line><path d="M0 0 H35 A25 25 0 0 1 35 50 H0 Z" class="gate-body"></path><line x1="60" y1="25" x2="80" y2="25" class="pin"></line></svg>
+          <span><b>AND</b><small>Both inputs 1</small></span>
+        </button>
+        <button class="pal-item" data-add="OR">
+          <svg viewBox="-24 -4 110 58"><line x1="-20" y1="12" x2="4" y2="12" class="pin"></line><line x1="-20" y1="38" x2="4" y2="38" class="pin"></line><path d="M0 0 Q18 25 0 50 Q30 50 60 25 Q30 0 0 0 Z" class="gate-body"></path><line x1="60" y1="25" x2="80" y2="25" class="pin"></line></svg>
+          <span><b>OR</b><small>Either input 1</small></span>
+        </button>
+        <button class="pal-item" data-add="XOR">
+          <svg viewBox="-24 -4 110 58"><line x1="-20" y1="12" x2="4" y2="12" class="pin"></line><line x1="-20" y1="38" x2="4" y2="38" class="pin"></line><path d="M-8 0 Q10 25 -8 50" class="gate-extra"></path><path d="M0 0 Q18 25 0 50 Q30 50 60 25 Q30 0 0 0 Z" class="gate-body"></path><line x1="60" y1="25" x2="80" y2="25" class="pin"></line></svg>
+          <span><b>XOR</b><small>Exactly one input 1</small></span>
+        </button>
+        <button class="pal-item" data-add="OUTPUT">
+          <svg viewBox="-24 -4 90 42"><line x1="-20" y1="17" x2="0" y2="17" class="pin"></line><rect x="0" y="0" width="44" height="34" rx="6" class="io-body"></rect><text x="22" y="22" text-anchor="middle" class="io-label">S</text></svg>
+          <span><b>Output</b><small>Names a result</small></span>
+        </button>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Build guide</h2>
+      <ol class="steps" id="steps"></ol>
+    </div>
+    <div class="section">
+      <h2>Tips</h2>
+      <p class="note">Drag from a pin to another pin to wire. Click a wire then press <span class="kbd">Delete</span> to remove it. Drag on empty space to select several gates, then group them. Double-click an input, output or component name to rename it.</p>
+    </div>
+   </div>
+  </aside>
+
+  <main class="canvas-wrap">
+    <div class="hint" id="hint"></div>
+    <svg id="canvas" width="1600" height="900" xmlns="http://www.w3.org/2000/svg"></svg>
+  </main>
+
+  <aside class="right">
+    <div id="rightRipple" hidden></div>
+    <div class="tabs" id="tabsCircuit">
+      <button class="tab active" data-tab="table">Truth table</button>
+      <button class="tab" data-tab="expr">Expressions</button>
+      <button class="tab" data-tab="sel">Selection</button>
+    </div>
+    <div class="pane active" id="pane-table"></div>
+    <div class="pane" id="pane-expr"></div>
+    <div class="pane" id="pane-sel"></div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("canvas");
+
+  // ---------- State ----------
+  const state = {
+    nodes: [], wires: [], groups: [], nextId: 1,
+    selected: [], selectedWire: null, selectedGroup: null,
+    notation: "ocr", showMid: false, wireStyle: "curved",
+    mode: "circuit",
+    rip: { width: 4, a: [1, 0, 1, 0], b: [1, 1, 0, 0], anim: -1 } // a[i] is bit i, bit 0 = least significant
+  };
+
+  const NOTATION = {
+    ocr:   { AND: " ∧ ", OR: " ∨ ", XOR: " ⊻ " },
+    words: { AND: " AND ", OR: " OR ", XOR: " XOR " },
+    maths: { AND: " . ", OR: " + ", XOR: " ⊕ " }
+  };
+
+  function isGate(node) { return node.type === "AND" || node.type === "OR" || node.type === "XOR"; }
+  function byId(id) {
+    for (let i = 0; i < state.nodes.length; i++) { if (state.nodes[i].id === id) { return state.nodes[i]; } }
+    return null;
+  }
+  function groupById(id) {
+    for (let i = 0; i < state.groups.length; i++) { if (state.groups[i].id === id) { return state.groups[i]; } }
+    return null;
+  }
+  function groupOf(nodeId) {
+    for (let i = 0; i < state.groups.length; i++) {
+      if (state.groups[i].members.indexOf(nodeId) !== -1) { return state.groups[i]; }
+    }
+    return null;
+  }
+  function incoming(nodeId, pin) {
+    for (let i = 0; i < state.wires.length; i++) {
+      const w = state.wires[i];
+      if (w.to === nodeId && w.pin === pin) { return w; }
+    }
+    return null;
+  }
+  function outgoing(nodeId) {
+    const out = [];
+    for (let i = 0; i < state.wires.length; i++) { if (state.wires[i].from === nodeId) { out.push(state.wires[i]); } }
+    return out;
+  }
+  function outputNodes() {
+    const outs = state.nodes.filter(function (n) { return n.type === "OUTPUT"; });
+    function rank(n) { return /^c/i.test(n.label) ? 0 : 1; }
+    outs.sort(function (a, b) { return (rank(a) - rank(b)) || (a.y - b.y); });
+    return outs;
+  }
+  function inputNodes() {
+    const list = state.nodes.filter(function (n) { return n.type === "INPUT"; });
+    list.sort(function (a, b) { return a.label < b.label ? -1 : (a.label > b.label ? 1 : 0); });
+    return list;
+  }
+
+  // ---------- Geometry ----------
+  function portPos(node, port) {
+    if (node.type === "INPUT") { return { x: node.x + 64, y: node.y + 17 }; }
+    if (node.type === "OUTPUT") { return { x: node.x - 20, y: node.y + 17 }; }
+    if (port === "out") { return { x: node.x + 80, y: node.y + 25 }; }
+    return { x: node.x - 20, y: node.y + (port === 0 ? 12 : 38) };
+  }
+  function nodeBox(node) {
+    if (node.type === "INPUT") { return { x: node.x, y: node.y, w: 64, h: 34 }; }
+    if (node.type === "OUTPUT") { return { x: node.x - 20, y: node.y, w: 64, h: 34 }; }
+    return { x: node.x - 20, y: node.y, w: 100, h: 50 };
+  }
+  function wirePath(a, b, lane) {
+    if (state.wireStyle === "square") {
+      // Horizontal and vertical runs only: out of the source, across, down/up, into the pin
+      const off = 16 + (lane || 0) * 14;
+      if (b.x - a.x >= off + 12) {
+        const midX = a.x + off;
+        return "M" + a.x + " " + a.y + " H" + midX + " V" + b.y + " H" + b.x;
+      }
+      // Destination is behind the source: loop round
+      const midY = Math.round((a.y + b.y) / 2 / 10) * 10 + (lane || 0) * 12;
+      return "M" + a.x + " " + a.y + " H" + (a.x + off) + " V" + midY + " H" + (b.x - off) + " V" + b.y + " H" + b.x;
+    }
+    const dx = Math.max(40, Math.abs(b.x - a.x) / 2);
+    return "M" + a.x + " " + a.y + " C" + (a.x + dx) + " " + a.y + ", " + (b.x - dx) + " " + b.y + ", " + b.x + " " + b.y;
+  }
+
+  // ---------- Expressions ----------
+  function exprOf(nodeId, seen) {
+    const node = byId(nodeId);
+    if (!node) { return { text: "?", atomic: true, missing: true }; }
+    if (seen.indexOf(nodeId) !== -1) { return { text: "…", atomic: true, missing: true }; }
+    seen = seen.concat([nodeId]);
+    if (node.type === "INPUT") { return { text: node.label || "?", atomic: true, missing: false }; }
+    if (node.type === "OUTPUT") {
+      const w = incoming(nodeId, 0);
+      if (!w) { return { text: "?", atomic: true, missing: true }; }
+      return exprOf(w.from, seen);
+    }
+    const parts = [];
+    let missing = false;
+    for (let pin = 0; pin < 2; pin++) {
+      const w = incoming(nodeId, pin);
+      if (!w) { parts.push("?"); missing = true; continue; }
+      const e = exprOf(w.from, seen);
+      if (e.missing) { missing = true; }
+      parts.push(e.atomic ? e.text : "(" + e.text + ")");
+    }
+    return { text: parts[0] + NOTATION[state.notation][node.type] + parts[1], atomic: false, missing: missing };
+  }
+  function pinExpr(nodeId, pin) {
+    const w = incoming(nodeId, pin);
+    if (!w) { return { text: "?", missing: true }; }
+    const e = exprOf(w.from, []);
+    return { text: e.text, missing: e.missing };
+  }
+
+  // ---------- Evaluation ----------
+  function evalNode(nodeId, values, memo, seen) {
+    if (memo.hasOwnProperty(nodeId)) { return memo[nodeId]; }
+    if (seen.indexOf(nodeId) !== -1) { return null; }
+    seen = seen.concat([nodeId]);
+    const node = byId(nodeId);
+    let result = null;
+    if (!node) { result = null; }
+    else if (node.type === "INPUT") { result = values[nodeId] ? 1 : 0; }
+    else if (node.type === "OUTPUT") {
+      const w = incoming(nodeId, 0);
+      result = w ? evalNode(w.from, values, memo, seen) : null;
+    } else {
+      const w0 = incoming(nodeId, 0);
+      const w1 = incoming(nodeId, 1);
+      const a = w0 ? evalNode(w0.from, values, memo, seen) : null;
+      const b = w1 ? evalNode(w1.from, values, memo, seen) : null;
+      if (a === null || b === null) { result = null; }
+      else if (node.type === "AND") { result = (a && b) ? 1 : 0; }
+      else if (node.type === "OR") { result = (a || b) ? 1 : 0; }
+      else { result = (a !== b) ? 1 : 0; }
+    }
+    memo[nodeId] = result;
+    return result;
+  }
+  function currentValues() {
+    const values = {};
+    state.nodes.forEach(function (n) { if (n.type === "INPUT") { values[n.id] = n.value ? 1 : 0; } });
+    return values;
+  }
+  function liveMemo() {
+    const memo = {};
+    const values = currentValues();
+    state.nodes.forEach(function (n) { evalNode(n.id, values, memo, []); });
+    return memo;
+  }
+
+  // Truth table: rows of input combos, columns of every node
+  function truthTable() {
+    const ins = inputNodes();
+    const rows = [];
+    const total = Math.pow(2, ins.length);
+    for (let r = 0; r < total; r++) {
+      const values = {};
+      for (let i = 0; i < ins.length; i++) {
+        values[ins[i].id] = (r >> (ins.length - 1 - i)) & 1;
+      }
+      const memo = {};
+      state.nodes.forEach(function (n) { evalNode(n.id, values, memo, []); });
+      rows.push({ values: values, memo: memo });
+    }
+    return { inputs: ins, rows: rows };
+  }
+
+  // ---------- Recognisers (teaching feedback) ----------
+  function sourceKey(nodeId) {
+    const w0 = incoming(nodeId, 0);
+    const w1 = incoming(nodeId, 1);
+    if (!w0 || !w1) { return null; }
+    const a = w0.from, b = w1.from;
+    return a < b ? a + "|" + b : b + "|" + a;
+  }
+  function findHalfAdders() {
+    const found = [];
+    const xors = state.nodes.filter(function (n) { return n.type === "XOR"; });
+    const ands = state.nodes.filter(function (n) { return n.type === "AND"; });
+    xors.forEach(function (x) {
+      const kx = sourceKey(x.id);
+      if (!kx) { return; }
+      ands.forEach(function (a) {
+        if (sourceKey(a.id) === kx) { found.push({ xor: x, and: a, key: kx }); }
+      });
+    });
+    return found;
+  }
+  function findFullAdder(tt) {
+    if (tt.inputs.length !== 3) { return null; }
+    const targetSum = [], targetCarry = [];
+    tt.rows.forEach(function (row) {
+      let ones = 0;
+      tt.inputs.forEach(function (n) { ones += row.values[n.id]; });
+      targetSum.push(ones % 2);
+      targetCarry.push(ones >= 2 ? 1 : 0);
+    });
+    function matches(nodeId, target) {
+      for (let r = 0; r < tt.rows.length; r++) {
+        if (tt.rows[r].memo[nodeId] !== target[r]) { return false; }
+      }
+      return true;
+    }
+    let sumNode = null, carryNode = null;
+    const candidates = outputNodes()
+      .concat(state.nodes.filter(function (n) { return isGate(n); }));
+    candidates.forEach(function (n) {
+      if (!sumNode && matches(n.id, targetSum)) { sumNode = n; }
+      if (!carryNode && matches(n.id, targetCarry)) { carryNode = n; }
+    });
+    if (sumNode && carryNode) { return { sum: sumNode, carry: carryNode }; }
+    return null;
+  }
+
+  // ---------- Ripple-carry adder built from the student's full adder ----------
+  function userFullAdder() {
+    const tt = truthTable();
+    const fa = findFullAdder(tt);
+    if (!fa) { return null; }
+    const ins = tt.inputs.slice();
+    let cin = null;
+    ins.forEach(function (n) {
+      const l = n.label.toLowerCase();
+      if (!cin && (l === "cin" || l === "c" || l === "ci" || l === "carry" || l === "c_in")) { cin = n; }
+    });
+    if (!cin) { cin = ins[ins.length - 1]; }
+    const rest = ins.filter(function (n) { return n !== cin; });
+    return { a: rest[0], b: rest[1], cin: cin, sum: fa.sum, carry: fa.carry };
+  }
+  function evalFullAdder(fa, a, b, cin) {
+    if (!fa) {
+      const ones = a + b + cin;
+      return { s: ones % 2, c: ones >= 2 ? 1 : 0 };
+    }
+    const values = {};
+    values[fa.a.id] = a; values[fa.b.id] = b; values[fa.cin.id] = cin;
+    const memo = {};
+    return { s: evalNode(fa.sum.id, values, memo, []), c: evalNode(fa.carry.id, values, memo, []) };
+  }
+  function rippleCompute(fa) {
+    const r = state.rip;
+    const stages = [];
+    let carry = 0;
+    for (let i = 0; i < r.width; i++) {
+      const out = evalFullAdder(fa, r.a[i], r.b[i], carry);
+      stages.push({ a: r.a[i], b: r.b[i], cin: carry, s: out.s, cout: out.c });
+      carry = out.c;
+    }
+    return { stages: stages, carryOut: carry };
+  }
+  function bitsToDenary(bits) {
+    let v = 0;
+    for (let i = 0; i < bits.length; i++) { v += bits[i] ? Math.pow(2, i) : 0; }
+    return v;
+  }
+  function denaryToBits(v, width) {
+    const bits = [];
+    for (let i = 0; i < width; i++) { bits.push((v >> i) & 1); }
+    return bits;
+  }
+  function bitString(bits) {
+    let s = "";
+    for (let i = bits.length - 1; i >= 0; i--) { s += bits[i]; }
+    return s;
+  }
+  function setRipWidth(w) {
+    const r = state.rip;
+    r.a = denaryToBits(bitsToDenary(r.a) % Math.pow(2, w), w);
+    r.b = denaryToBits(bitsToDenary(r.b) % Math.pow(2, w), w);
+    r.width = w;
+    r.anim = -1;
+  }
+  let animTimer = null;
+  function rippleAnimate() {
+    if (animTimer) { clearTimeout(animTimer); }
+    state.rip.anim = 0;
+    render();
+    function step() {
+      animTimer = setTimeout(function () {
+        if (state.mode !== "ripple" || state.rip.anim < 0) { return; }
+        state.rip.anim++;
+        if (state.rip.anim >= state.rip.width) { state.rip.anim = -1; }
+        render();
+        if (state.rip.anim >= 0) { step(); }
+      }, 750);
+    }
+    step();
+  }
+
+  function renderRipple() {
+    while (svg.firstChild) { svg.removeChild(svg.firstChild); }
+    const fa = userFullAdder();
+    const res = rippleCompute(fa);
+    const r = state.rip;
+    const W = 185, x0 = 110, sx0 = x0;
+    const animating = r.anim >= 0;
+    function stageX(i) { return sx0 + (r.width - 1 - i) * W; }
+    function settled(i) { return !animating || i < r.anim; }
+    function v(x) { return x === null ? "–" : String(x); }
+
+    const drawW = sx0 + r.width * W + 40;
+    svg.setAttribute("viewBox", "0 0 " + drawW + " 590");
+    svg.removeAttribute("width"); svg.removeAttribute("height");
+    svg.classList.add("fit");
+
+    // Layout: row of A bits, row of B bits beneath (each column aligned), full adders, sum bits
+    const yA = 70, yB = 140, yFA = 240, hFA = 130, yMid = yFA + hFA / 2, yS = 440;
+    for (let i = 0; i < r.width; i++) {
+      const cx = stageX(i) + 85;
+      svg.appendChild(text(cx, 44, "bit " + i + " (" + Math.pow(2, i) + "s)", "place", "middle"));
+    }
+    // Row labels at the left, with the denary value of each row
+    const leftX = stageX(r.width - 1) - 60;
+    svg.appendChild(text(leftX, yA + 26, "A", "io-label", "middle"));
+    svg.appendChild(text(leftX, yB + 26, "B", "io-label", "middle"));
+    svg.appendChild(text(leftX, yS + 26, "S", "io-label", "middle"));
+
+    for (let i = 0; i < r.width; i++) {
+      const sx = stageX(i);
+      const cx = sx + 85;
+      const st = res.stages[i];
+      const isSet = settled(i);
+      const isActive = animating && i === r.anim;
+      const showCin = isSet || isActive || i === 0;
+
+      // A bit (top row) and B bit (row beneath)
+      [["a", yA, st.a], ["b", yB, st.b]].forEach(function (spec) {
+        const g = el("g", { "data-rbit": spec[0], "data-rindex": String(i) });
+        g.appendChild(el("rect", { x: cx - 25, y: spec[1], width: 50, height: 40, rx: 6 }, "bit-box" + (spec[2] ? " on" : "")));
+        g.appendChild(text(cx, spec[1] + 26, String(spec[2]), "bit-val" + (spec[2] ? " on" : ""), "middle"));
+        g.appendChild(text(cx + 32, spec[1] + 13, spec[0].toUpperCase() + i, "bit-name", "start"));
+        svg.appendChild(g);
+      });
+      // A leaves its box on the left, runs down a channel past B, then into the left-hand pin
+      svg.appendChild(el("path", { d: "M" + (cx - 25) + " " + (yA + 20) + " H" + (cx - 62) + " V" + (yFA - 26) + " H" + (cx - 30) + " V" + yFA }, "rwire" + (st.a ? " on" : "")));
+      // B drops straight down, steps right into the right-hand pin
+      svg.appendChild(el("path", { d: "M" + cx + " " + (yB + 40) + " V" + (yFA - 12) + " H" + (cx + 30) + " V" + yFA }, "rwire" + (st.b ? " on" : "")));
+
+      // Full adder box
+      const box = el("g", { "data-stage": String(i) });
+      box.appendChild(el("rect", { x: sx + 20, y: yFA, width: 130, height: hFA, rx: 10 },
+        "fa-box" + (isActive ? " active" : "") + (!isSet && !isActive ? " waiting" : "") + (fa ? " peek" : "")));
+      box.appendChild(text(cx, yMid - 6, "FULL ADDER", "fa-title", "middle"));
+      box.appendChild(text(cx, yMid + 12, fa ? "your circuit" : "reference", "fa-sub", "middle"));
+      box.appendChild(text(cx - 30, yFA + 15, "A", "fa-sub", "middle"));
+      box.appendChild(text(cx + 30, yFA + 15, "B", "fa-sub", "middle"));
+      box.appendChild(text(sx + 142, yMid + 4, "Cin", "fa-sub", "end"));
+      box.appendChild(text(sx + 28, yMid + 4, "Cout", "fa-sub", "start"));
+      box.appendChild(text(cx, yFA + hFA - 8, "S", "fa-sub", "middle"));
+      svg.appendChild(box);
+
+      // Carry in (from the right)
+      const cinOn = showCin && st.cin === 1;
+      svg.appendChild(el("path", { d: "M" + (sx + 175) + " " + yMid + " H " + (sx + 150) }, "rwire" + (cinOn ? " on" : "") + (!showCin ? " waiting" : "")));
+      if (i === 0) {
+        svg.appendChild(el("rect", { x: sx + 175, y: yMid - 20, width: 40, height: 40, rx: 6 }, "bit-box ro"));
+        svg.appendChild(text(sx + 195, yMid + 6, "0", "bit-val", "middle"));
+        svg.appendChild(text(sx + 195, yMid - 24, "Cin", "bit-name", "middle"));
+      }
+      // Carry out (to the left) — joins the next stage's carry in
+      const coutKnown = isSet;
+      const coutOn = coutKnown && st.cout === 1;
+      svg.appendChild(el("path", { d: "M" + (sx + 20) + " " + yMid + " H " + (sx - 25) }, "rwire" + (coutOn ? " on" : "") + (!coutKnown ? " waiting" : "")));
+      svg.appendChild(text(sx - 2, yMid - 8, coutKnown ? v(st.cout) : "?", "place", "middle"));
+      if (i === r.width - 1) {
+        svg.appendChild(el("rect", { x: sx - 65, y: yMid - 20, width: 40, height: 40, rx: 6 }, "bit-box ro" + (coutOn ? " on" : "")));
+        svg.appendChild(text(sx - 45, yMid + 6, coutKnown ? v(st.cout) : "?", "bit-val" + (coutOn ? " on" : ""), "middle"));
+        svg.appendChild(text(sx - 45, yMid - 24, "Cout", "bit-name", "middle"));
+      }
+
+      // Sum out (downwards)
+      const sKnown = isSet;
+      const sOn = sKnown && st.s === 1;
+      svg.appendChild(el("path", { d: "M" + cx + " " + (yFA + hFA) + " V" + yS }, "rwire" + (sOn ? " on" : "") + (!sKnown ? " waiting" : "")));
+      svg.appendChild(el("rect", { x: cx - 25, y: yS, width: 50, height: 40, rx: 6 }, "bit-box ro" + (sOn ? " on" : "")));
+      svg.appendChild(text(cx, yS + 26, sKnown ? v(st.s) : "?", "bit-val" + (sOn ? " on" : ""), "middle"));
+      svg.appendChild(text(cx + 32, yS + 13, "S" + i, "bit-name", "start"));
+    }
+
+    // Summary line under the drawing
+    const aVal = bitsToDenary(r.a), bVal = bitsToDenary(r.b);
+    const sBits = res.stages.map(function (s) { return s.s; });
+    const sVal = bitsToDenary(sBits);
+    const full = !animating;
+    const line1 = text(stageX(r.width - 1) - 80, 530, "", "sum-line");
+    line1.textContent = "A = " + bitString(r.a) + " (" + aVal + ")    B = " + bitString(r.b) + " (" + bVal + ")    A + B = " + (aVal + bVal);
+    svg.appendChild(line1);
+    const line2 = text(stageX(r.width - 1) - 80, 560, "", "sum-line");
+    if (full) {
+      line2.textContent = "Result: carry " + res.carryOut + ", sum " + bitString(sBits) + " → " + (res.carryOut ? (res.carryOut * Math.pow(2, r.width) + sVal) + " with the carry, " : "") + sVal + " in " + r.width + " bits" + (res.carryOut ? "  ⚠ overflow" : "");
+    } else {
+      line2.textContent = "Carry rippling… bit " + r.anim + " is settling.";
+    }
+    svg.appendChild(line2);
+
+    // Side panels
+    document.getElementById("hint").textContent = fa
+      ? "Your full adder, copied " + r.width + " times. Click a box to look inside it."
+      : "Using a reference full adder for now — build and name one in Circuit mode and it will be used here.";
+    const ra = document.getElementById("ripA"), rb = document.getElementById("ripB");
+    if (document.activeElement !== ra) { ra.value = String(aVal); }
+    if (document.activeElement !== rb) { rb.value = String(bVal); }
+    ra.max = String(Math.pow(2, r.width) - 1); rb.max = ra.max;
+    document.getElementById("ripWidth").value = String(r.width);
+    document.getElementById("ripAnim").disabled = animating;
+
+    let html = "<h2>Written out</h2>";
+    function known(i) { return full || i < r.anim; }
+    function cells(fn) {
+      let s = "";
+      for (let i = r.width - 1; i >= 0; i--) { const c = fn(i); s += (c === null ? "–" : String(c)) + " "; }
+      return s;
+    }
+    // Carry written above the column it goes INTO (the Cin of that stage)
+    const carryRow = cells(function (i) { return i === 0 ? "" : (known(i - 1) ? res.stages[i].cin : "?"); }).replace(/ $/, "");
+    const sumRow = cells(function (i) { return known(i) ? sBits[i] : "?"; });
+    html += "<div class=\"addition\">";
+    html += "<span class=\"c\">  carry  " + carryRow + "</span>\n";
+    html += "      A  " + cells(function (i) { return r.a[i]; }) + "\n";
+    html += "      B  " + cells(function (i) { return r.b[i]; }) + "\n";
+    html += "<span class=\"rule\">" + "".padStart(9 + r.width * 2, "─") + "</span>\n";
+    html += "<span class=\"s\">    sum " + (full ? res.carryOut : "?") + " " + sumRow + "</span>\n";
+    html += "</div>";
+    html += "<p class=\"note\">Read it like column addition in denary: add the column, write the sum bit, carry the rest to the left. Each carry written above is the <b>Cout</b> of one full adder and the <b>Cin</b> of the next.</p>";
+    if (full && res.carryOut) {
+      html += "<div class=\"arith\">" + aVal + " + " + bVal + " = " + (aVal + bVal) + ", but the largest number " + r.width + " bits can hold is " + (Math.pow(2, r.width) - 1) + ".<br><small>The 1 carried out of the top bit has nowhere to go — this is overflow. The register would show " + sVal + ".</small></div>";
+    }
+    html += "<h2 style=\"margin-top:14px\">Why \"ripple\"?</h2>";
+    html += "<p class=\"note\">Press <b>Ripple the carry</b> to watch it. Bit 3's answer depends on bit 2's carry, which depends on bit 1's, and so on. Every extra bit adds another gate delay to the chain — a 64-bit adder built this way would be slow. Real CPUs use carry look-ahead adders that work out the carries in parallel.</p>";
+    if (fa) {
+      html += "<p class=\"note\">Inside each box: <b>" + esc(fa.carry.label || "Cout") + "</b> = " + esc(exprOf(fa.carry.id, []).text) + " and <b>" + esc(fa.sum.label || "S") + "</b> = " + esc(exprOf(fa.sum.id, []).text) + ", with " + esc(fa.a.label) + ", " + esc(fa.b.label) + " and " + esc(fa.cin.label) + " as the three inputs.</p>";
+    }
+    document.getElementById("rightRipple").innerHTML = html;
+    save();
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    if (animTimer) { clearTimeout(animTimer); }
+    state.rip.anim = -1;
+    const ripple = mode === "ripple";
+    document.getElementById("leftRipple").hidden = !ripple;
+    document.getElementById("leftCircuit").hidden = ripple;
+    document.getElementById("rightRipple").hidden = !ripple;
+    document.getElementById("tabsCircuit").hidden = ripple;
+    const panes = document.querySelectorAll(".pane");
+    for (let i = 0; i < panes.length; i++) { panes[i].style.visibility = ripple ? "hidden" : ""; panes[i].style.height = ripple ? "0" : ""; panes[i].style.overflow = ripple ? "hidden" : ""; }
+    document.getElementById("modeCircuit").classList.toggle("active", !ripple);
+    document.getElementById("modeRipple").classList.toggle("active", ripple);
+    document.getElementById("groupBtn").hidden = ripple;
+    document.getElementById("abstractBtn").hidden = ripple;
+    if (!ripple) {
+      svg.removeAttribute("viewBox"); svg.classList.remove("fit");
+      svg.setAttribute("width", "1600"); svg.setAttribute("height", "900");
+    }
+    drag = null;
+    render();
+  }
+
+  // ---------- Mutations ----------
+  function addNode(type, x, y) {
+    const node = { id: state.nextId++, type: type, x: Math.round(x / 10) * 10, y: Math.round(y / 10) * 10, label: "", value: 0 };
+    if (type === "INPUT") { node.label = nextLabel(["A", "B", "Cin", "D", "E"]); }
+    if (type === "OUTPUT") { node.label = nextLabel(["S", "C", "Cout", "Q", "R"]); }
+    state.nodes.push(node);
+    return node;
+  }
+  function nextLabel(pool) {
+    const used = state.nodes.map(function (n) { return n.label; });
+    for (let i = 0; i < pool.length; i++) { if (used.indexOf(pool[i]) === -1) { return pool[i]; } }
+    return "X" + state.nextId;
+  }
+  function connect(fromId, toId, pin) {
+    const target = byId(toId), source = byId(fromId);
+    if (!target || !source || fromId === toId) { return; }
+    if (source.type === "OUTPUT" || target.type === "INPUT") { return; }
+    state.wires = state.wires.filter(function (w) { return !(w.to === toId && w.pin === pin); });
+    state.wires.push({ id: state.nextId++, from: fromId, to: toId, pin: pin });
+  }
+  function deleteNode(id) {
+    state.nodes = state.nodes.filter(function (n) { return n.id !== id; });
+    state.wires = state.wires.filter(function (w) { return w.from !== id && w.to !== id; });
+    state.groups.forEach(function (g) { g.members = g.members.filter(function (m) { return m !== id; }); });
+    state.groups = state.groups.filter(function (g) { return g.members.length > 0; });
+  }
+  function deleteSelection() {
+    if (state.selectedWire !== null) {
+      state.wires = state.wires.filter(function (w) { return w.id !== state.selectedWire; });
+      state.selectedWire = null;
+    } else if (state.selected.length) {
+      state.selected.forEach(deleteNode);
+      state.selected = [];
+    } else if (state.selectedGroup !== null) {
+      ungroup(state.selectedGroup);
+    }
+    render();
+  }
+  function groupSelected() {
+    const members = state.selected.filter(function (id) { const n = byId(id); return n && isGate(n) && !groupOf(id); });
+    if (!members.length) { return; }
+    const has = findHalfAdders().some(function (h) { return members.indexOf(h.xor.id) !== -1 && members.indexOf(h.and.id) !== -1; });
+    const name = has ? "Half adder" : "Component " + (state.groups.length + 1);
+    const g = { id: state.nextId++, name: name, members: members.slice() };
+    g.pinGroups = derivePinGroups(g);
+    state.groups.push(g);
+    state.selected = [];
+    state.selectedGroup = g.id;
+    render();
+  }
+  function ungroup(groupId) {
+    state.groups = state.groups.filter(function (g) { return g.id !== groupId; });
+    if (state.selectedGroup === groupId) { state.selectedGroup = null; }
+  }
+  function duplicateGroup(groupId) {
+    const g = groupById(groupId);
+    if (!g) { return; }
+    const box = groupExtent(g);
+    const map = {};
+    const dy = box.h + 40;
+    g.members.forEach(function (id) {
+      const n = byId(id);
+      const copy = addNode(n.type, n.x, n.y + dy);
+      map[id] = copy.id;
+    });
+    state.wires.slice().forEach(function (w) {
+      if (map.hasOwnProperty(w.from) && map.hasOwnProperty(w.to)) {
+        state.wires.push({ id: state.nextId++, from: map[w.from], to: map[w.to], pin: w.pin });
+      }
+    });
+    const ng = { id: state.nextId++, name: g.name, collapsed: !!g.collapsed, members: g.members.map(function (id) { return map[id]; }) };
+    ng.pinGroups = ensurePinGroups(g).map(function (pg) {
+      return pg.map(function (mp) { return { node: map[mp.node], pin: mp.pin }; });
+    });
+    state.groups.push(ng);
+    state.selectedGroup = ng.id;
+    state.selected = [];
+    render();
+  }
+  function groupBounds(g) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    g.members.forEach(function (id) {
+      const n = byId(id);
+      if (!n) { return; }
+      const b = nodeBox(n);
+      minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
+      maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
+    });
+    // Leave room inside the box for the longest expression label on the members' pins
+    let longest = 1;
+    g.members.forEach(function (id) {
+      const n = byId(id);
+      if (!n || !isGate(n)) { return; }
+      for (let pin = 0; pin < 2; pin++) { longest = Math.max(longest, pinExpr(id, pin).text.length); }
+    });
+    const padX = 44 + Math.round(longest * 7.6), padTop = 44, padBottom = 18;
+    const w = Math.max(260, (maxX - minX) + padX * 2);
+    return { x: minX - padX, y: minY - padTop, w: w, h: (maxY - minY) + padTop + padBottom };
+  }
+  // A component remembers which gate pins share one input (worked out from the wiring when it was made),
+  // so a copy of a half adder shows two input pins, not four
+  function derivePinGroups(g) {
+    const groups = [], bySource = {};
+    g.members.forEach(function (id) {
+      const n = byId(id);
+      if (!n || !isGate(n)) { return; }
+      for (let pin = 0; pin < 2; pin++) {
+        const w = incoming(id, pin);
+        if (w && g.members.indexOf(w.from) !== -1) { continue; }
+        if (!w) { groups.push([{ node: id, pin: pin }]); continue; }
+        if (!bySource[w.from]) { bySource[w.from] = []; groups.push(bySource[w.from]); }
+        bySource[w.from].push({ node: id, pin: pin });
+      }
+    });
+    return groups;
+  }
+  function ensurePinGroups(g) {
+    if (!g.pinGroups) { g.pinGroups = derivePinGroups(g); }
+    return g.pinGroups;
+  }
+  function groupPins(g) {
+    const ins = [], outs = [];
+    ensurePinGroups(g).forEach(function (pg) {
+      // Pins that were one input may since have been wired differently; split by their current source
+      const buckets = {}, order = [];
+      pg.forEach(function (mp) {
+        const n = byId(mp.node);
+        if (!n) { return; }
+        const w = incoming(mp.node, mp.pin);
+        if (w && g.members.indexOf(w.from) !== -1) { return; }
+        const key = w ? "src:" + w.from : "open";
+        if (!buckets[key]) { buckets[key] = { key: key + ":" + mp.node, pins: [], source: w ? w.from : null, y: Infinity }; order.push(key); }
+        buckets[key].pins.push(mp);
+        buckets[key].y = Math.min(buckets[key].y, portPos(n, mp.pin).y);
+      });
+      order.forEach(function (k) {
+        const e = buckets[k];
+        e.label = e.source !== null ? exprOf(e.source, []).text : "?";
+        ins.push(e);
+      });
+    });
+    g.members.forEach(function (id) {
+      const n = byId(id);
+      if (!n || !isGate(n)) { return; }
+      const outsOfNode = outgoing(id);
+      const leaves = outsOfNode.length === 0 || outsOfNode.some(function (w) { return g.members.indexOf(w.to) === -1; });
+      if (leaves) {
+        const p = portPos(n, "out");
+        const targets = outsOfNode.filter(function (w) { const t = byId(w.to); return t && t.type === "OUTPUT"; });
+        const expr = exprOf(id, []).text;
+        const outLabel = targets.length ? byId(targets[0].to).label : null;
+        const name = outLabel || (n.type === "XOR" ? "S" : (n.type === "AND" ? "C" : n.type));
+        outs.push({ nodeId: id, y: p.y, label: outLabel || expr, expr: expr, name: name });
+      }
+    });
+    ins.sort(function (a, b) { return a.y - b.y; });
+    outs.sort(function (a, b) { return a.y - b.y; });
+    return { ins: ins, outs: outs };
+  }
+  function collapsedGroupOf(nodeId) {
+    const g = groupOf(nodeId);
+    return (g && g.collapsed) ? g : null;
+  }
+  // Geometry of a component drawn as a closed box, with pins spaced down each side
+  function collapsedLayout(g) {
+    let minX = Infinity, minY = Infinity;
+    g.members.forEach(function (id) { const n = byId(id); if (n) { minX = Math.min(minX, n.x); minY = Math.min(minY, n.y); } });
+    if (minX === Infinity) { minX = 0; minY = 0; }
+    const pins = groupPins(g);
+    const rows = Math.max(pins.ins.length, pins.outs.length, 2);
+    const box = { x: minX - 20, y: minY - 20, w: 190, h: 34 + rows * 30 + 8 };
+    pins.ins.forEach(function (p, i) { p.py = box.y + 34 + i * 30 + 15; });
+    pins.outs.forEach(function (p, i) { p.py = box.y + 34 + i * 30 + 15; });
+    return { box: box, ins: pins.ins, outs: pins.outs };
+  }
+  function expandedLayout(g) {
+    const box = groupBounds(g);
+    const pins = groupPins(g);
+    pins.ins.forEach(function (p) { p.py = p.y; });
+    pins.outs.forEach(function (p) { p.py = p.y; });
+    return { box: box, ins: pins.ins, outs: pins.outs };
+  }
+  function layoutOf(g) { return g.collapsed ? collapsedLayout(g) : expandedLayout(g); }
+  function groupExtent(g) { return g.collapsed ? collapsedLayout(g).box : groupBounds(g); }
+  // Where a wire's two ends are drawn, taking collapsed components into account (null = hidden inside one)
+  function wireEnds(w) {
+    const a = byId(w.from), b = byId(w.to);
+    if (!a || !b) { return null; }
+    const ga = groupOf(w.from), gb = groupOf(w.to);
+    if (ga && gb && ga === gb) { return null; } // inside a component: drawn as a branch instead
+    let pa = null, pb = null;
+    if (ga) {
+      const lay = ga.collapsed ? collapsedLayout(ga) : expandedLayout(ga);
+      const edgeX = ga.collapsed ? lay.box.x + lay.box.w + 20 : lay.box.x + lay.box.w;
+      lay.outs.forEach(function (o) { if (o.nodeId === w.from) { pa = { x: edgeX, y: o.py }; } });
+    } else { pa = portPos(a, "out"); }
+    if (gb) {
+      const lay = gb.collapsed ? collapsedLayout(gb) : expandedLayout(gb);
+      const edgeX = gb.collapsed ? lay.box.x - 20 : lay.box.x;
+      lay.ins.forEach(function (p) {
+        p.pins.forEach(function (mp) { if (mp.node === w.to && mp.pin === w.pin) { pb = { x: edgeX, y: p.py }; } });
+      });
+    } else { pb = portPos(b, w.pin); }
+    if (!pa || !pb) { return null; }
+    return { a: pa, b: pb };
+  }
+  function setAllCollapsed(flag) {
+    state.groups.forEach(function (g) { g.collapsed = flag; });
+    render();
+  }
+
+  // ---------- Rendering ----------
+  function el(name, attrs, cls) {
+    const e = document.createElementNS(SVG_NS, name);
+    for (const k in attrs) { if (attrs.hasOwnProperty(k)) { e.setAttribute(k, attrs[k]); } }
+    if (cls) { e.setAttribute("class", cls); }
+    return e;
+  }
+  function text(x, y, str, cls, anchor) {
+    const t = el("text", { x: x, y: y, "text-anchor": anchor || "start" }, cls);
+    t.textContent = str;
+    return t;
+  }
+
+  let drag = null; // { mode, ... }
+
+  function render(canvasOnly) {
+    if (state.mode === "ripple") { renderRipple(); return; }
+    while (svg.firstChild) { svg.removeChild(svg.firstChild); }
+    const memo = liveMemo();
+
+    // Groups
+    state.groups.forEach(function (g) {
+      if (g.collapsed) { return; } // drawn after the wires so its pins stay on top
+      const b = groupBounds(g);
+      const grp = el("g", { "data-group": g.id });
+      grp.appendChild(el("rect", { x: b.x, y: b.y, width: b.w, height: b.h, rx: 10 }, "group-box" + (state.selectedGroup === g.id ? " selected" : "")));
+      grp.appendChild(el("rect", { x: b.x, y: b.y, width: b.w, height: 30, rx: 10, "data-group-handle": g.id }, "group-handle"));
+      const title = text(b.x + 12, b.y + 20, g.name.toUpperCase(), "group-title");
+      title.setAttribute("data-group-handle", g.id);
+      grp.appendChild(title);
+      const pins = groupPins(g);
+      const sub = pins.ins.length + " in · " + pins.outs.length + " out";
+      grp.appendChild(text(b.x + b.w - 12, b.y + b.h - 8, sub, "group-pin-label", "end"));
+      svg.appendChild(grp);
+    });
+
+    // Inside an open component: each input enters at one point on the edge and branches to the gates,
+    // each output leaves through one point on the right edge
+    const junctions = [];
+    state.groups.forEach(function (g) {
+      if (g.collapsed) { return; }
+      const lay = expandedLayout(g);
+      const b = lay.box;
+      lay.ins.forEach(function (p, i) {
+        const on = p.source !== null && memo[p.source] === 1;
+        const trunkX = b.x + 14 + i * 10;
+        p.pins.forEach(function (mp) {
+          const n = byId(mp.node);
+          const pp = portPos(n, mp.pin);
+          const d = "M" + b.x + " " + p.py + " H" + trunkX + " V" + pp.y + " H" + pp.x;
+          svg.appendChild(el("path", { d: d }, "wire branch" + (on ? " on" : "")));
+          if (p.pins.length > 1 && pp.y !== p.py) { junctions.push({ x: trunkX, y: p.py, on: on }); }
+        });
+        junctions.push({ x: b.x, y: p.py, on: on, edge: true, open: p.source === null, gid: g.id, kind: "in", index: i });
+      });
+      lay.outs.forEach(function (o, oi) {
+        const n = byId(o.nodeId);
+        const pp = portPos(n, "out");
+        const on = memo[o.nodeId] === 1;
+        svg.appendChild(el("path", { d: "M" + pp.x + " " + pp.y + " H" + (b.x + b.w - 14) + " V" + o.py + " H" + (b.x + b.w) }, "wire branch" + (on ? " on" : "")));
+        junctions.push({ x: b.x + b.w, y: o.py, on: on, edge: true, gid: g.id, kind: "out", index: oi });
+      });
+    });
+
+    // Wires
+    state.wires.forEach(function (w) {
+      const ends = wireEnds(w);
+      if (!ends) { return; }
+      const d = wirePath(ends.a, ends.b, w.pin === 1 ? 1 : 0);
+      const val = memo[w.from];
+      const hit = el("path", { d: d, "data-wire": w.id }, "wire-hit");
+      const line = el("path", { d: d, "data-wire": w.id }, "wire" + (val === 1 ? " on" : "") + (state.selectedWire === w.id ? " selected" : ""));
+      svg.appendChild(hit);
+      svg.appendChild(line);
+    });
+
+    junctions.forEach(function (j) {
+      if (j.edge) {
+        const attrs = { cx: j.x, cy: j.y, r: 5.5, "data-gport": j.kind, "data-gport-group": j.gid, "data-gport-index": String(j.index) };
+        svg.appendChild(el("circle", attrs, "junction edge" + (j.on ? " on" : "")));
+        const hit = { cx: j.x, cy: j.y, r: 12, "data-gport": j.kind, "data-gport-group": j.gid, "data-gport-index": String(j.index) };
+        svg.appendChild(el("circle", hit, "port-hit"));
+      } else {
+        svg.appendChild(el("circle", { cx: j.x, cy: j.y, r: 3.5 }, "junction" + (j.on ? " on" : "")));
+      }
+      if (j.open) { svg.appendChild(text(j.x - 9, j.y + 4, "?", "expr q", "end")); }
+    });
+
+    // Collapsed components sit above the wires, like gates do
+    state.groups.forEach(function (g) { if (g.collapsed) { renderCollapsed(g, memo); } });
+
+    // Nodes (gates inside a collapsed component are not drawn)
+    state.nodes.forEach(function (n) {
+      if (collapsedGroupOf(n.id)) { return; }
+      const g = el("g", { transform: "translate(" + n.x + "," + n.y + ")", "data-node": n.id },
+        "node" + (state.selected.indexOf(n.id) !== -1 ? " selected" : ""));
+      const val = memo[n.id];
+      if (n.type === "INPUT") {
+        g.appendChild(el("rect", { x: 0, y: 0, width: 44, height: 34, rx: 6 }, "io-body" + (n.value ? " on" : "")));
+        g.appendChild(text(22, 22, n.label || "?", "io-label", "middle"));
+        g.appendChild(el("line", { x1: 44, y1: 17, x2: 64, y2: 17 }, "pin"));
+        g.appendChild(text(50, 12, n.value ? "1" : "0", "io-val" + (n.value ? " on" : ""), "start"));
+        g.appendChild(el("circle", { cx: 64, cy: 17, r: 5, "data-port": "out" }, "port" + (n.value ? " on" : "")));
+        g.appendChild(el("circle", { cx: 64, cy: 17, r: 11, "data-port": "out" }, "port-hit"));
+      } else if (n.type === "OUTPUT") {
+        g.appendChild(el("line", { x1: -20, y1: 17, x2: 0, y2: 17 }, "pin"));
+        g.appendChild(el("rect", { x: 0, y: 0, width: 44, height: 34, rx: 6 }, "io-body" + (val === 1 ? " on" : "")));
+        g.appendChild(text(22, 22, n.label || "?", "io-label", "middle"));
+        g.appendChild(text(50, 22, val === null ? "–" : String(val), "io-val" + (val === 1 ? " on" : ""), "start"));
+        g.appendChild(el("circle", { cx: -20, cy: 17, r: 5, "data-port": "0" }, "port" + (val === 1 ? " on" : "")));
+        g.appendChild(el("circle", { cx: -20, cy: 17, r: 11, "data-port": "0" }, "port-hit"));
+        const e = pinExpr(n.id, 0);
+        g.appendChild(text(-24, 8, e.text, "expr in" + (e.missing ? " q" : ""), "end"));
+      } else {
+        const inStart = n.type === "AND" ? 0 : 4;
+        g.appendChild(el("line", { x1: -20, y1: 12, x2: inStart, y2: 12 }, "pin"));
+        g.appendChild(el("line", { x1: -20, y1: 38, x2: inStart, y2: 38 }, "pin"));
+        g.appendChild(el("line", { x1: 60, y1: 25, x2: 80, y2: 25 }, "pin"));
+        if (n.type === "XOR") { g.appendChild(el("path", { d: "M-8 0 Q10 25 -8 50" }, "gate-extra")); }
+        const d = n.type === "AND" ? "M0 0 H35 A25 25 0 0 1 35 50 H0 Z" : "M0 0 Q18 25 0 50 Q30 50 60 25 Q30 0 0 0 Z";
+        g.appendChild(el("path", { d: d }, "gate-body"));
+        g.appendChild(text(n.type === "AND" ? 22 : 26, 29, n.type, "gate-name", "middle"));
+        for (let pin = 0; pin < 2; pin++) {
+          const w = incoming(n.id, pin);
+          const on = w && memo[w.from] === 1;
+          const py = pin === 0 ? 12 : 38;
+          g.appendChild(el("circle", { cx: -20, cy: py, r: 5, "data-port": String(pin) }, "port" + (on ? " on" : "")));
+          g.appendChild(el("circle", { cx: -20, cy: py, r: 11, "data-port": String(pin) }, "port-hit"));
+          const e = pinExpr(n.id, pin);
+          g.appendChild(text(-26, py + 4, e.text, "expr in" + (e.missing ? " q" : ""), "end"));
+        }
+        g.appendChild(el("circle", { cx: 80, cy: 25, r: 5, "data-port": "out" }, "port" + (val === 1 ? " on" : "")));
+        g.appendChild(el("circle", { cx: 80, cy: 25, r: 11, "data-port": "out" }, "port-hit"));
+        const e = exprOf(n.id, []);
+        g.appendChild(text(86, 18, e.text + (val === null ? "" : "  = " + val), "expr" + (e.missing ? " q" : ""), "start"));
+      }
+      svg.appendChild(g);
+    });
+
+    // Temporary wire / marquee
+    if (drag && drag.mode === "wire") {
+      const start = drag.startPos;
+      const d = drag.port === "out" ? wirePath(start, drag.cur) : wirePath(drag.cur, start);
+      svg.appendChild(el("path", { d: d }, "wire temp"));
+    }
+    if (drag && drag.mode === "marquee") {
+      const r = normRect(drag.start, drag.cur);
+      svg.appendChild(el("rect", { x: r.x, y: r.y, width: r.w, height: r.h }, "marquee"));
+    }
+
+    if (!canvasOnly) { renderSidebars(memo); }
+    save();
+  }
+
+  function renderCollapsed(g, memo) {
+    const lay = collapsedLayout(g);
+    const b = lay.box;
+    const grp = el("g", { "data-group": g.id });
+    grp.appendChild(el("rect", { x: b.x, y: b.y, width: b.w, height: b.h, rx: 10, "data-group-handle": g.id },
+      "comp-box" + (state.selectedGroup === g.id ? " selected" : "")));
+    const title = text(b.x + b.w / 2, b.y + 20, g.name.toUpperCase(), "comp-title", "middle");
+    title.setAttribute("data-group-handle", g.id);
+    grp.appendChild(title);
+    lay.ins.forEach(function (p, i) {
+      const on = p.source !== null && memo[p.source] === 1;
+      grp.appendChild(el("line", { x1: b.x - 20, y1: p.py, x2: b.x, y2: p.py }, "pin"));
+      grp.appendChild(el("circle", { cx: b.x - 20, cy: p.py, r: 5, "data-gport": "in", "data-gport-group": g.id, "data-gport-index": String(i) }, "port" + (on ? " on" : "")));
+      grp.appendChild(el("circle", { cx: b.x - 20, cy: p.py, r: 11, "data-gport": "in", "data-gport-group": g.id, "data-gport-index": String(i) }, "port-hit"));
+      grp.appendChild(text(b.x - 26, p.py + 4, p.label, "expr in" + (p.source === null ? " q" : ""), "end"));
+    });
+    lay.outs.forEach(function (p, i) {
+      const val = memo[p.nodeId];
+      grp.appendChild(el("line", { x1: b.x + b.w, y1: p.py, x2: b.x + b.w + 20, y2: p.py }, "pin"));
+      grp.appendChild(el("circle", { cx: b.x + b.w + 20, cy: p.py, r: 5, "data-gport": "out", "data-gport-group": g.id, "data-gport-index": String(i) }, "port" + (val === 1 ? " on" : "")));
+      grp.appendChild(el("circle", { cx: b.x + b.w + 20, cy: p.py, r: 11, "data-gport": "out", "data-gport-group": g.id, "data-gport-index": String(i) }, "port-hit"));
+      grp.appendChild(text(b.x + b.w - 10, p.py + 4, p.name, "comp-pin-name", "end"));
+      const toOutput = outgoing(p.nodeId).some(function (w) { const t = byId(w.to); return t && t.type === "OUTPUT"; });
+      if (!toOutput) { grp.appendChild(text(b.x + b.w + 26, p.py - 3, p.expr + (val === null ? "" : "  = " + val), "expr", "start")); }
+    });
+    svg.appendChild(grp);
+  }
+
+  function normRect(a, b) {
+    return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(a.x - b.x), h: Math.abs(a.y - b.y) };
+  }
+
+  // ---------- Side panels ----------
+  function renderSidebars(memo) {
+    const tt = truthTable();
+    const halves = findHalfAdders();
+    const full = findFullAdder(tt);
+
+    // Group button
+    const groupable = state.selected.filter(function (id) { const n = byId(id); return n && isGate(n) && !groupOf(id); });
+    document.getElementById("groupBtn").disabled = groupable.length === 0;
+    const abstractBtn = document.getElementById("abstractBtn");
+    abstractBtn.disabled = state.groups.length === 0;
+    const anyOpen = state.groups.some(function (g) { return !g.collapsed; });
+    abstractBtn.textContent = anyOpen ? "Abstract: hide gates" : "Abstract: show gates";
+
+    // Hint
+    const hint = document.getElementById("hint");
+    if (state.nodes.length === 0) { hint.textContent = "Add parts from the left to begin."; }
+    else if (state.wires.length === 0) { hint.textContent = "Drag from an output pin (right side) to an input pin (left side) to make a wire."; }
+    else if (full) { hint.textContent = "Full adder complete — click the inputs or a truth table row to test it."; }
+    else if (halves.length && state.groups.length === 0) { hint.textContent = "Half adder working. Select its two gates and group them into a component."; }
+    else if (state.groups.length === 1 && halves.length && !full) { hint.textContent = "Click the component's title bar, then Duplicate in the Selection tab to get a second half adder."; }
+    else if (state.groups.length >= 2 && inputNodes().length < 3) { hint.textContent = "Now add a third input for the carry in — use Add Cin in the build guide, or drag an Input from the parts list."; }
+    else { hint.textContent = "Click an input to toggle it. Wires glow amber when they carry a 1."; }
+
+    // Build guide
+    const andOK = halves.length > 0 || state.nodes.some(function (n) {
+      if (n.type !== "AND") { return false; }
+      const w0 = incoming(n.id, 0), w1 = incoming(n.id, 1);
+      return w0 && w1 && byId(w0.from).type === "INPUT" && byId(w1.from).type === "INPUT" && w0.from !== w1.from;
+    });
+    const halfGrouped = state.groups.some(function (g) {
+      return halves.some(function (h) { return g.members.indexOf(h.xor.id) !== -1 && g.members.indexOf(h.and.id) !== -1; });
+    });
+    const twoHalves = state.groups.filter(function (g) {
+      const types = g.members.map(function (id) { const n = byId(id); return n ? n.type : ""; });
+      return types.indexOf("AND") !== -1 && types.indexOf("XOR") !== -1;
+    }).length >= 2;
+    const hasCin = inputNodes().length >= 3;
+    const chained = halves.some(function (h) {
+      const w0 = incoming(h.xor.id, 0), w1 = incoming(h.xor.id, 1);
+      const src = [byId(w0.from), byId(w1.from)];
+      return src.some(function (s) { return s && s.type === "XOR"; });
+    });
+    const orOK = state.nodes.some(function (n) {
+      if (n.type !== "OR") { return false; }
+      const w0 = incoming(n.id, 0), w1 = incoming(n.id, 1);
+      return w0 && w1 && byId(w0.from).type === "AND" && byId(w1.from).type === "AND";
+    });
+    const steps = [
+      { t: "Wire A and B into an AND gate", s: "This gives the carry: 1 only when both inputs are 1.", done: andOK },
+      { t: "Wire the same A and B into an XOR gate", s: "This gives the sum bit: 1 when exactly one input is 1.", done: halves.length > 0 },
+      { t: "Group the two gates into a half adder", s: "Drag a box around them, then press Group.", done: halfGrouped },
+      { t: "Duplicate the half adder", s: "Click the component's title bar, then Duplicate in the Selection tab.", done: twoHalves },
+      { t: "Add a third input, Cin", s: "The carry in from the previous column.", done: hasCin, action: hasCin ? null : { id: "addCin", label: "Add Cin" } },
+      { t: "Feed the first sum (A ⊻ B) and Cin into the second half adder", s: "It adds the carry-in to the partial sum.", done: chained },
+      { t: "OR the two carries together", s: "Only one can ever be 1 at once — why?", done: orOK },
+      { t: "Name the outputs S and Cout and check the truth table", s: "Eight rows, and it should count 0 to 3 in binary.", done: !!full }
+    ];
+    const ol = document.getElementById("steps");
+    ol.innerHTML = "";
+    let nextMarked = false;
+    steps.forEach(function (st, i) {
+      const li = document.createElement("li");
+      let cls = st.done ? "done" : "";
+      if (!st.done && !nextMarked) { cls += " next"; nextMarked = true; }
+      li.className = cls;
+      li.innerHTML = "<span class=\"tick\">" + (st.done ? "✓" : (i + 1)) + "</span><span>" + st.t + "<small>" + st.s + "</small>" +
+        (st.action ? "<button class=\"btn primary step-btn\" id=\"" + st.action.id + "\">" + st.action.label + "</button>" : "") + "</span>";
+      ol.appendChild(li);
+    });
+    bind("addCin", function () {
+      const ins = inputNodes();
+      let y = 120;
+      ins.forEach(function (n) { y = Math.max(y, n.y + 120); });
+      const node = addNode("INPUT", 60, y);
+      node.label = "Cin";
+      state.selected = [node.id]; state.selectedWire = null; state.selectedGroup = null;
+      render();
+    });
+
+    // Truth table pane
+    const paneT = document.getElementById("pane-table");
+    let html = "";
+    if (tt.inputs.length === 0) {
+      html += "<p class=\"note\">Add an input to see a truth table.</p>";
+    } else if (tt.inputs.length > 4) {
+      html += "<p class=\"note\">Truth tables are shown for up to four inputs.</p>";
+    } else {
+      const outs = outputNodes();
+      const mids = state.showMid ? state.nodes.filter(isGate) : [];
+      html += "<label class=\"check\"><input type=\"checkbox\" id=\"showMid\"" + (state.showMid ? " checked" : "") + "> Show working columns (each gate)</label>";
+      html += "<div class=\"tt-wrap\"><table class=\"tt\"><thead><tr>";
+      tt.inputs.forEach(function (n) { html += "<th>" + esc(n.label) + "</th>"; });
+      mids.forEach(function (n) { html += "<th class=\"mid\">" + esc(exprOf(n.id, []).text) + "</th>"; });
+      outs.forEach(function (n) { html += "<th class=\"out\">" + esc(n.label) + "</th>"; });
+      if (outs.length === 0) { html += "<th class=\"out\">(no outputs)</th>"; }
+      html += "</tr></thead><tbody>";
+      const cur = currentValues();
+      tt.rows.forEach(function (row, r) {
+        let isCur = true;
+        tt.inputs.forEach(function (n) { if (row.values[n.id] !== cur[n.id]) { isCur = false; } });
+        html += "<tr data-row=\"" + r + "\"" + (isCur ? " class=\"current\"" : "") + ">";
+        tt.inputs.forEach(function (n) { html += "<td>" + row.values[n.id] + "</td>"; });
+        mids.forEach(function (n) { html += "<td class=\"mid\">" + cell(row.memo[n.id]) + "</td>"; });
+        outs.forEach(function (n) { html += "<td class=\"out\">" + cell(row.memo[n.id]) + "</td>"; });
+        if (outs.length === 0) { html += "<td class=\"out\">–</td>"; }
+        html += "</tr>";
+      });
+      html += "</tbody></table></div>";
+      html += "<p class=\"note\">Click a row to set the inputs to it. The highlighted row is the circuit's current state.</p>";
+    }
+    html += recognitionHtml(halves, full, memo, tt);
+    paneT.innerHTML = html;
+    const showMid = document.getElementById("showMid");
+    if (showMid) { showMid.addEventListener("change", function () { state.showMid = showMid.checked; render(); }); }
+    const rows = paneT.querySelectorAll("tr[data-row]");
+    for (let i = 0; i < rows.length; i++) {
+      rows[i].addEventListener("click", function (evt) {
+        const r = parseInt(evt.currentTarget.getAttribute("data-row"), 10);
+        const row = tt.rows[r];
+        tt.inputs.forEach(function (n) { n.value = row.values[n.id]; });
+        render();
+      });
+    }
+
+    // Expressions pane
+    const paneE = document.getElementById("pane-expr");
+    let eh = "";
+    const outs = outputNodes();
+    if (outs.length) {
+      eh += "<h2>Outputs</h2>";
+      outs.forEach(function (n) {
+        const e = exprOf(n.id, []);
+        eh += "<div class=\"eq\"><b>" + esc(n.label) + "</b> = " + esc(e.text) + "</div>";
+      });
+    }
+    const gates = state.nodes.filter(isGate);
+    if (gates.length) {
+      eh += "<h2 style=\"margin-top:14px\">Every gate</h2>";
+      gates.forEach(function (n) {
+        const e = exprOf(n.id, []);
+        const grp = groupOf(n.id);
+        eh += "<div class=\"eq dim\">" + n.type + (grp ? " <small>(" + esc(grp.name) + ")</small>" : "") + ": " + esc(e.text) + "</div>";
+      });
+    }
+    if (!outs.length && !gates.length) { eh += "<p class=\"note\">Expressions appear here as you wire gates up.</p>"; }
+    eh += "<h2 style=\"margin-top:14px\">Notation</h2>";
+    eh += "<p class=\"note\">OCR papers write AND as ∧, OR as ∨, XOR as ⊻ and NOT as ¬. Textbooks and older papers often use the maths form: A.B, A + B, A ⊕ B. Switch the notation at the top to compare — the circuit doesn't change, only the way we write it down.</p>";
+    paneE.innerHTML = eh;
+
+    renderSelectionPane();
+  }
+
+  function recognitionHtml(halves, full, memo, tt) {
+    let html = "";
+    if (full) {
+      html += "<div class=\"badge\">✓ Full adder recognised</div>";
+      html += "<div class=\"eq\"><b>" + esc(full.carry.label || "Carry") + "</b> = " + esc(exprOf(full.carry.id, []).text) + "</div>";
+      html += "<div class=\"eq\"><b>" + esc(full.sum.label || "Sum") + "</b> = " + esc(exprOf(full.sum.id, []).text) + "</div>";
+      const ins = tt.inputs;
+      let total = 0;
+      const parts = [];
+      ins.forEach(function (n) { total += n.value ? 1 : 0; parts.push(esc(n.label) + "=" + (n.value ? 1 : 0)); });
+      const c = memo[full.carry.id], s = memo[full.sum.id];
+      html += "<div class=\"arith\">" + parts.join(" + ") + " → " + total + " in denary = <b>" + c + s + "</b> in binary<br><small>carry " + c + ", sum " + s + "</small></div>";
+      html += "<p class=\"note\">Notice the two carry terms can never both be 1 at the same time, so the final OR gate could be swapped for an XOR and it would still work.</p>";
+    } else if (halves.length) {
+      html += "<div class=\"badge\">✓ Half adder recognised" + (halves.length > 1 ? " ×" + halves.length : "") + "</div>";
+      const h = halves[0];
+      html += "<div class=\"eq\"><b>Carry</b> = " + esc(exprOf(h.and.id, []).text) + "</div>";
+      html += "<div class=\"eq\"><b>Sum</b> = " + esc(exprOf(h.xor.id, []).text) + "</div>";
+      html += "<p class=\"note\">A half adder adds two bits. It has no way to accept a carry from a previous column — that's what the full adder fixes.</p>";
+    }
+    return html;
+  }
+
+  function renderSelectionPane() {
+    const pane = document.getElementById("pane-sel");
+    let html = "";
+    if (state.selectedGroup !== null && groupById(state.selectedGroup)) {
+      const g = groupById(state.selectedGroup);
+      const pins = groupPins(g);
+      html += "<h2>Component</h2>";
+      html += "<div class=\"field\"><label for=\"gname\">Name</label><input type=\"text\" id=\"gname\" value=\"" + esc(g.name) + "\"></div>";
+      html += "<p class=\"note\">" + g.members.length + " gate" + (g.members.length === 1 ? "" : "s") + " inside · " + pins.ins.length + " input" + (pins.ins.length === 1 ? "" : "s") + " · " + pins.outs.length + " output" + (pins.outs.length === 1 ? "" : "s") + "</p>";
+      html += "<p class=\"note\">This is abstraction: once the box works, we can hide the gates and just use its pins.</p>";
+      html += "<div class=\"row\"><button class=\"btn primary\" id=\"collapseBtn\">" + (g.collapsed ? "Show inner workings" : "Hide inner workings") + "</button></div>";
+      html += "<div class=\"row\" style=\"margin-top:8px\"><button class=\"btn\" id=\"dupBtn\">Duplicate</button><button class=\"btn\" id=\"ungroupBtn\">Ungroup</button></div>";
+    } else if (state.selectedWire !== null) {
+      const w = state.wires.filter(function (x) { return x.id === state.selectedWire; })[0];
+      html += "<h2>Wire</h2>";
+      if (w) { html += "<div class=\"eq\">carries: " + esc(exprOf(w.from, []).text) + "</div>"; }
+      html += "<div class=\"row\"><button class=\"btn danger\" id=\"delBtn\">Delete wire</button></div>";
+    } else if (state.selected.length === 1) {
+      const n = byId(state.selected[0]);
+      html += "<h2>" + (n.type === "INPUT" ? "Input" : n.type === "OUTPUT" ? "Output" : n.type + " gate") + "</h2>";
+      if (n.type === "INPUT" || n.type === "OUTPUT") {
+        html += "<div class=\"field\"><label for=\"nlabel\">Label <small>(or double-click it on the canvas)</small></label><input type=\"text\" id=\"nlabel\" maxlength=\"12\" value=\"" + esc(n.label) + "\"></div>";
+      }
+      if (n.type === "INPUT") { html += "<div class=\"row\"><button class=\"btn\" id=\"toggleBtn\">Toggle value (now " + (n.value ? 1 : 0) + ")</button></div>"; }
+      if (isGate(n)) {
+        html += "<div class=\"eq\">" + esc(exprOf(n.id, []).text) + "</div>";
+        html += "<p class=\"note\">" + gateNote(n.type) + "</p>";
+      }
+      html += "<div class=\"row\" style=\"margin-top:10px\"><button class=\"btn danger\" id=\"delBtn\">Delete</button></div>";
+    } else if (state.selected.length > 1) {
+      html += "<h2>" + state.selected.length + " parts selected</h2>";
+      const groupable = state.selected.filter(function (id) { const n = byId(id); return n && isGate(n) && !groupOf(id); });
+      html += "<div class=\"row\"><button class=\"btn primary\" id=\"groupBtn2\"" + (groupable.length ? "" : " disabled") + ">Group " + groupable.length + " gate" + (groupable.length === 1 ? "" : "s") + " into a component</button><button class=\"btn danger\" id=\"delBtn\">Delete</button></div>";
+      html += "<p class=\"note\">Only gates go inside a component; inputs and outputs stay on the outside so the box has clear pins.</p>";
+    } else {
+      html += "<p class=\"note\">Click a gate, wire or component to see its details here.</p>";
+      html += "<p class=\"note\"><b>Shortcuts</b><br><span class=\"kbd\">Delete</span> remove selection · <span class=\"kbd\">Shift</span>+click add to selection · <span class=\"kbd\">Esc</span> clear selection</p>";
+    }
+    pane.innerHTML = html;
+
+    const gname = document.getElementById("gname");
+    if (gname) { gname.addEventListener("input", function () { groupById(state.selectedGroup).name = gname.value; render(); gname.focus(); }); }
+    const nlabel = document.getElementById("nlabel");
+    if (nlabel) {
+      nlabel.addEventListener("input", function () { byId(state.selected[0]).label = nlabel.value.trim(); render(true); });
+      nlabel.addEventListener("blur", function () { render(); });
+    }
+    bind("dupBtn", function () { duplicateGroup(state.selectedGroup); });
+    bind("collapseBtn", function () { const g = groupById(state.selectedGroup); g.collapsed = !g.collapsed; render(); });
+    bind("ungroupBtn", function () { ungroup(state.selectedGroup); render(); });
+    bind("delBtn", deleteSelection);
+    bind("toggleBtn", function () { const n = byId(state.selected[0]); n.value = n.value ? 0 : 1; render(); });
+    bind("groupBtn2", groupSelected);
+  }
+  function bind(id, fn) {
+    const b = document.getElementById(id);
+    if (b) { b.addEventListener("click", fn); }
+  }
+  function gateNote(type) {
+    if (type === "AND") { return "Output is 1 only when both inputs are 1. In an adder it spots the case 1 + 1, which produces a carry."; }
+    if (type === "OR") { return "Output is 1 when at least one input is 1. In the full adder it merges the two possible carries."; }
+    return "Output is 1 when the inputs differ. 0+1 and 1+0 give a sum of 1; 0+0 and 1+1 give 0 — exactly the rightmost bit of the addition.";
+  }
+  function cell(v) { return v === null ? "–" : String(v); }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  // ---------- Pointer interaction on the canvas ----------
+  function svgPoint(evt) {
+    const pt = svg.createSVGPoint();
+    pt.x = evt.clientX; pt.y = evt.clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) { return { x: 0, y: 0 }; }
+    const p = pt.matrixTransform(ctm.inverse());
+    return { x: p.x, y: p.y };
+  }
+  function closestAttr(target, attr) {
+    let e = target;
+    while (e && e !== svg) {
+      if (e.getAttribute && e.getAttribute(attr) !== null) { return e; }
+      e = e.parentNode;
+    }
+    return null;
+  }
+
+  svg.addEventListener("pointerdown", function (evt) {
+    if (evt.button !== 0) { return; }
+    if (state.mode === "ripple") {
+      const bitEl = closestAttr(evt.target, "data-rbit");
+      const stageEl = closestAttr(evt.target, "data-stage");
+      if (bitEl) {
+        const which = bitEl.getAttribute("data-rbit");
+        const idx = parseInt(bitEl.getAttribute("data-rindex"), 10);
+        state.rip[which][idx] = state.rip[which][idx] ? 0 : 1;
+        if (animTimer) { clearTimeout(animTimer); }
+        state.rip.anim = -1;
+        render();
+      } else if (stageEl) {
+        peekInside(parseInt(stageEl.getAttribute("data-stage"), 10));
+      }
+      return;
+    }
+    const p = svgPoint(evt);
+    const portEl = closestAttr(evt.target, "data-port");
+    const nodeEl = closestAttr(evt.target, "data-node");
+    const handleEl = closestAttr(evt.target, "data-group-handle");
+    const wireEl = closestAttr(evt.target, "data-wire");
+    try { svg.setPointerCapture(evt.pointerId); } catch (e) { /* not supported */ }
+
+    const gportEl = closestAttr(evt.target, "data-gport");
+    if (gportEl) {
+      const gid = parseInt(gportEl.getAttribute("data-gport-group"), 10);
+      const kind = gportEl.getAttribute("data-gport");
+      const index = parseInt(gportEl.getAttribute("data-gport-index"), 10);
+      drag = { mode: "wire", gport: { gid: gid, kind: kind, index: index }, port: kind === "out" ? "out" : "in",
+        startPos: { x: parseFloat(gportEl.getAttribute("cx")), y: parseFloat(gportEl.getAttribute("cy")) }, cur: p };
+      render();
+      return;
+    }
+    if (portEl && nodeEl) {
+      const nodeId = parseInt(nodeEl.getAttribute("data-node"), 10);
+      const portStr = portEl.getAttribute("data-port");
+      const port = portStr === "out" ? "out" : parseInt(portStr, 10);
+      drag = { mode: "wire", nodeId: nodeId, port: port, startPos: portPos(byId(nodeId), port), cur: p };
+      render();
+      return;
+    }
+    if (nodeEl) {
+      const id = parseInt(nodeEl.getAttribute("data-node"), 10);
+      if (isDoubleTap("node:" + id)) { drag = null; if (handleDoubleTap("node:" + id)) { evt.preventDefault(); return; } }
+      if (evt.shiftKey) {
+        const i = state.selected.indexOf(id);
+        if (i === -1) { state.selected.push(id); } else { state.selected.splice(i, 1); }
+      } else if (state.selected.indexOf(id) === -1) {
+        state.selected = [id];
+      }
+      state.selectedWire = null; state.selectedGroup = null;
+      drag = { mode: "move", start: p, moved: false, clickedId: id, origins: state.selected.map(function (sid) { const n = byId(sid); return { id: sid, x: n.x, y: n.y }; }) };
+      render();
+      return;
+    }
+    if (handleEl) {
+      const gid = parseInt(handleEl.getAttribute("data-group-handle"), 10);
+      if (isDoubleTap("group:" + gid)) { drag = null; if (handleDoubleTap("group:" + gid)) { evt.preventDefault(); return; } }
+      const g = groupById(gid);
+      state.selectedGroup = gid; state.selected = []; state.selectedWire = null;
+      drag = { mode: "move", start: p, moved: false, clickedId: null, origins: g.members.map(function (sid) { const n = byId(sid); return { id: sid, x: n.x, y: n.y }; }) };
+      render();
+      return;
+    }
+    if (wireEl) {
+      const wid = parseInt(wireEl.getAttribute("data-wire"), 10);
+      drag = null;
+      if (isDoubleTap("wire:" + wid)) { handleDoubleTap("wire:" + wid); return; }
+      state.selectedWire = wid;
+      state.selected = []; state.selectedGroup = null;
+      render();
+      return;
+    }
+    if (!evt.shiftKey) { state.selected = []; }
+    state.selectedWire = null; state.selectedGroup = null;
+    drag = { mode: "marquee", start: p, cur: p, additive: evt.shiftKey };
+    render();
+  });
+
+  svg.addEventListener("pointermove", function (evt) {
+    if (!drag) { return; }
+    const p = svgPoint(evt);
+    if (drag.mode === "wire" || drag.mode === "marquee") { drag.cur = p; render(); return; }
+    if (drag.mode === "move") {
+      const dx = p.x - drag.start.x, dy = p.y - drag.start.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) { drag.moved = true; }
+      if (!drag.moved) { return; }
+      drag.origins.forEach(function (o) {
+        const n = byId(o.id);
+        n.x = Math.round((o.x + dx) / 10) * 10;
+        n.y = Math.round((o.y + dy) / 10) * 10;
+      });
+      render();
+    }
+  });
+
+  svg.addEventListener("pointerup", function (evt) {
+    if (!drag) { return; }
+    const p = svgPoint(evt);
+    if (drag.mode === "wire") {
+      // Each end of a wire is either a source (one node's output) or a set of sinks (input pins)
+      function resolveStart() {
+        if (drag.gport) {
+          const lay = layoutOf(groupById(drag.gport.gid));
+          if (drag.gport.kind === "out") { const o = lay.outs[drag.gport.index]; return o ? { source: o.nodeId } : null; }
+          const ip = lay.ins[drag.gport.index]; return ip ? { sinks: ip.pins } : null;
+        }
+        if (drag.port === "out") { return { source: drag.nodeId }; }
+        return { sinks: [{ node: drag.nodeId, pin: drag.port }] };
+      }
+      const under = document.elementFromPoint(evt.clientX, evt.clientY);
+      const gportEl = under ? closestAttr(under, "data-gport") : null;
+      const portEl = under ? closestAttr(under, "data-port") : null;
+      const nodeEl = under ? closestAttr(under, "data-node") : null;
+      let target = null;
+      if (gportEl) {
+        const lay = layoutOf(groupById(parseInt(gportEl.getAttribute("data-gport-group"), 10)));
+        const idx = parseInt(gportEl.getAttribute("data-gport-index"), 10);
+        if (gportEl.getAttribute("data-gport") === "out") { const o = lay.outs[idx]; target = o ? { source: o.nodeId } : null; }
+        else { const ip = lay.ins[idx]; target = ip ? { sinks: ip.pins } : null; }
+      } else if (portEl && nodeEl) {
+        const otherId = parseInt(nodeEl.getAttribute("data-node"), 10);
+        const ps = portEl.getAttribute("data-port");
+        target = ps === "out" ? { source: otherId } : { sinks: [{ node: otherId, pin: parseInt(ps, 10) }] };
+      }
+      const from = resolveStart();
+      if (from && target) {
+        if (from.source !== undefined && target.sinks) { target.sinks.forEach(function (sk) { connect(from.source, sk.node, sk.pin); }); }
+        else if (from.sinks && target.source !== undefined) { from.sinks.forEach(function (sk) { connect(target.source, sk.node, sk.pin); }); }
+      } else if (from && from.sinks && !target) {
+        // Dragging an input pin away to empty space disconnects it
+        state.wires = state.wires.filter(function (w) {
+          return !from.sinks.some(function (sk) { return w.to === sk.node && w.pin === sk.pin; });
+        });
+      }
+    } else if (drag.mode === "move") {
+      if (!drag.moved && drag.clickedId !== null) {
+        const n = byId(drag.clickedId);
+        if (n && n.type === "INPUT" && !evt.shiftKey) { n.value = n.value ? 0 : 1; }
+      }
+    } else if (drag.mode === "marquee") {
+      const r = normRect(drag.start, p);
+      if (r.w > 4 || r.h > 4) {
+        state.nodes.forEach(function (n) {
+          if (collapsedGroupOf(n.id)) { return; }
+          const b = nodeBox(n);
+          const inside = b.x >= r.x && b.y >= r.y && b.x + b.w <= r.x + r.w && b.y + b.h <= r.y + r.h;
+          if (inside && state.selected.indexOf(n.id) === -1) { state.selected.push(n.id); }
+        });
+      }
+    }
+    drag = null;
+    render();
+  });
+
+  // Inline renaming: double-click an input, output or component title
+  const wrapEl = document.querySelector(".canvas-wrap");
+  const editor = document.createElement("input");
+  editor.type = "text"; editor.className = "label-editor"; editor.maxLength = 12; editor.hidden = true;
+  editor.setAttribute("aria-label", "Rename");
+  wrapEl.appendChild(editor);
+  let editing = null; // { kind: "node"|"group", id }
+  function openEditor(kind, id, x, y, w, value) {
+    // Let the current click finish before taking focus, or its default action steals it back
+    setTimeout(function () { openEditorNow(kind, id, x, y, w, value); }, 0);
+  }
+  function openEditorNow(kind, id, x, y, w, value) {
+    const pt = svg.createSVGPoint();
+    pt.x = x; pt.y = y;
+    const sp = pt.matrixTransform(svg.getScreenCTM());
+    const wr = wrapEl.getBoundingClientRect();
+    editor.style.left = (sp.x - wr.left + wrapEl.scrollLeft) + "px";
+    editor.style.top = (sp.y - wr.top + wrapEl.scrollTop) + "px";
+    editor.style.width = w + "px";
+    editor.value = value;
+    editing = { kind: kind, id: id };
+    editor.hidden = false;
+    editor.focus();
+    editor.select();
+  }
+  function closeEditor(commit) {
+    if (!editing) { return; }
+    if (commit) {
+      const v = editor.value.trim();
+      if (editing.kind === "node") { const n = byId(editing.id); if (n && v) { n.label = v; } }
+      else { const g = groupById(editing.id); if (g && v) { g.name = v; } }
+    }
+    editing = null;
+    editor.hidden = true;
+    render();
+  }
+  editor.addEventListener("keydown", function (evt) {
+    if (evt.key === "Enter") { evt.preventDefault(); closeEditor(true); }
+    if (evt.key === "Escape") { evt.preventDefault(); closeEditor(false); }
+    evt.stopPropagation();
+  });
+  editor.addEventListener("blur", function () { closeEditor(true); });
+
+  // The canvas is redrawn between clicks, so the browser's own dblclick never fires; detect it here
+  let lastTap = { key: "", time: 0 };
+  function isDoubleTap(key) {
+    const now = Date.now();
+    const dbl = lastTap.key === key && (now - lastTap.time) < 400;
+    lastTap = { key: dbl ? "" : key, time: now };
+    return dbl;
+  }
+  function handleDoubleTap(key) {
+    const parts = key.split(":");
+    const id = parseInt(parts[1], 10);
+    if (parts[0] === "node") {
+      const n = byId(id);
+      if (n && (n.type === "INPUT" || n.type === "OUTPUT")) {
+        if (n.type === "INPUT") { n.value = n.value ? 0 : 1; } // undo the toggle the second click caused
+        render();
+        openEditor("node", n.id, n.x, n.y, 64, n.label);
+        return true;
+      }
+    } else if (parts[0] === "group") {
+      const g = groupById(id);
+      if (g) { const b = groupExtent(g); render(); openEditor("group", g.id, b.x + 4, b.y + 2, Math.min(200, b.w - 8), g.name); return true; }
+    } else if (parts[0] === "wire") {
+      state.wires = state.wires.filter(function (w) { return w.id !== id; });
+      state.selectedWire = null;
+      render();
+      return true;
+    }
+    return false;
+  }
+
+  document.addEventListener("keydown", function (evt) {
+    const tag = document.activeElement ? document.activeElement.tagName : "";
+    if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") { return; }
+    if (evt.key === "Delete" || evt.key === "Backspace") { evt.preventDefault(); deleteSelection(); }
+    if (evt.key === "Escape") { state.selected = []; state.selectedWire = null; state.selectedGroup = null; drag = null; render(); }
+  });
+
+  // ---------- Palette (click or drag onto canvas) ----------
+  const palItems = document.querySelectorAll(".pal-item");
+  for (let i = 0; i < palItems.length; i++) {
+    palItems[i].addEventListener("pointerdown", function (evt) {
+      const type = evt.currentTarget.getAttribute("data-add");
+      const startX = evt.clientX, startY = evt.clientY;
+      const item = evt.currentTarget;
+      item.setPointerCapture(evt.pointerId);
+      function up(e) {
+        item.releasePointerCapture(e.pointerId);
+        item.removeEventListener("pointerup", up);
+        const rect = svg.getBoundingClientRect();
+        const moved = Math.abs(e.clientX - startX) > 6 || Math.abs(e.clientY - startY) > 6;
+        let node;
+        if (moved && e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          const p = svgPoint(e);
+          node = addNode(type, p.x - 30, p.y - 20);
+        } else {
+          node = addNode(type, freeSpot(type).x, freeSpot(type).y);
+        }
+        state.selected = [node.id]; state.selectedWire = null; state.selectedGroup = null;
+        render();
+      }
+      item.addEventListener("pointerup", up);
+    });
+  }
+  function freeSpot(type) {
+    const count = state.nodes.length;
+    if (type === "INPUT") { return { x: 60, y: 100 + (count % 6) * 90 }; }
+    if (type === "OUTPUT") { return { x: 1100, y: 120 + (count % 6) * 90 }; }
+    return { x: 360 + (count % 3) * 160, y: 120 + (count % 5) * 120 };
+  }
+
+  // ---------- Header controls ----------
+  document.getElementById("notation").addEventListener("change", function (evt) {
+    state.notation = evt.target.value; render();
+  });
+  document.getElementById("wireStyle").addEventListener("change", function (evt) {
+    state.wireStyle = evt.target.value; render();
+  });
+  document.getElementById("preset").addEventListener("change", function (evt) {
+    const v = evt.target.value;
+    if (v) { loadPreset(v); }
+    evt.target.value = "";
+  });
+  document.getElementById("groupBtn").addEventListener("click", groupSelected);
+  document.getElementById("abstractBtn").addEventListener("click", function () {
+    setAllCollapsed(state.groups.some(function (g) { return !g.collapsed; }));
+  });
+
+  // ---------- Ripple mode controls ----------
+  function peekInside(i) {
+    const fa = userFullAdder();
+    if (!fa) { return; }
+    const res = rippleCompute(fa);
+    const st = res.stages[i];
+    fa.a.value = st.a; fa.b.value = st.b; fa.cin.value = st.cin;
+    state.selected = []; state.selectedWire = null; state.selectedGroup = null;
+    setMode("circuit");
+    document.getElementById("hint").textContent = "Looking inside bit " + i + ": " + fa.a.label + "=" + st.a + ", " + fa.b.label + "=" + st.b + ", " + fa.cin.label + "=" + st.cin + ". Switch back to Ripple adder when you're done.";
+  }
+  document.getElementById("modeCircuit").addEventListener("click", function () { setMode("circuit"); });
+  document.getElementById("modeRipple").addEventListener("click", function () { setMode("ripple"); });
+  document.getElementById("ripWidth").addEventListener("change", function (evt) {
+    setRipWidth(parseInt(evt.target.value, 10)); render();
+  });
+  function numberInput(id, which) {
+    document.getElementById(id).addEventListener("input", function (evt) {
+      const max = Math.pow(2, state.rip.width) - 1;
+      let v = parseInt(evt.target.value, 10);
+      if (isNaN(v)) { return; }
+      v = Math.max(0, Math.min(max, v));
+      state.rip[which] = denaryToBits(v, state.rip.width);
+      state.rip.anim = -1;
+      render();
+    });
+  }
+  numberInput("ripA", "a");
+  numberInput("ripB", "b");
+  document.getElementById("ripRandom").addEventListener("click", function () {
+    const max = Math.pow(2, state.rip.width);
+    state.rip.a = denaryToBits(Math.floor(Math.random() * max), state.rip.width);
+    state.rip.b = denaryToBits(Math.floor(Math.random() * max), state.rip.width);
+    state.rip.anim = -1;
+    render();
+  });
+  document.getElementById("ripAnim").addEventListener("click", rippleAnimate);
+  const wrap = document.querySelector(".canvas-wrap");
+  const fullBtn = document.getElementById("ripFull");
+  if (!document.fullscreenEnabled) { fullBtn.hidden = true; }
+  fullBtn.addEventListener("click", function () {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      const req = wrap.requestFullscreen ? wrap.requestFullscreen() : null;
+      if (req && req.catch) { req.catch(function () { /* not allowed here */ }); }
+    }
+  });
+  document.addEventListener("fullscreenchange", function () {
+    fullBtn.textContent = document.fullscreenElement ? "Exit full screen" : "Full screen ⤢";
+  });
+
+  const tabs = document.querySelectorAll(".tab");
+  for (let i = 0; i < tabs.length; i++) {
+    tabs[i].addEventListener("click", function (evt) {
+      const name = evt.currentTarget.getAttribute("data-tab");
+      for (let j = 0; j < tabs.length; j++) { tabs[j].classList.toggle("active", tabs[j] === evt.currentTarget); }
+      const panes = document.querySelectorAll(".pane");
+      for (let j = 0; j < panes.length; j++) { panes[j].classList.toggle("active", panes[j].id === "pane-" + name); }
+    });
+  }
+
+  // Theme: always start in light mode unless the viewer chose dark here before
+  const themeBtn = document.getElementById("themeBtn");
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    themeBtn.textContent = theme === "dark" ? "Light" : "Dark";
+    try { localStorage.setItem("adder-theme", theme); } catch (e) { /* storage unavailable */ }
+  }
+  themeBtn.addEventListener("click", function () {
+    const cur = document.documentElement.getAttribute("data-theme");
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
+  let savedTheme = "light";
+  try { savedTheme = localStorage.getItem("adder-theme") || "light"; } catch (e) { savedTheme = "light"; }
+  applyTheme(savedTheme);
+
+  // ---------- Presets ----------
+  function clearAll() {
+    state.nodes = []; state.wires = []; state.groups = [];
+    state.selected = []; state.selectedWire = null; state.selectedGroup = null;
+  }
+  function loadPreset(name) {
+    clearAll();
+    if (name === "blank") { render(); return; }
+    const A = addNode("INPUT", 60, 120); A.label = "A";
+    const B = addNode("INPUT", 60, 240); B.label = "B";
+    if (name === "start") {
+      addNode("AND", 380, 100);
+      addNode("XOR", 380, 230);
+      const C = addNode("OUTPUT", 760, 110); C.label = "C";
+      const S = addNode("OUTPUT", 760, 240); S.label = "S";
+      render(); return;
+    }
+    const a1 = addNode("AND", 340, 100);
+    const x1 = addNode("XOR", 340, 230);
+    connect(A.id, a1.id, 0); connect(B.id, a1.id, 1);
+    connect(A.id, x1.id, 0); connect(B.id, x1.id, 1);
+    const g1 = { id: state.nextId++, name: "Half adder", members: [a1.id, x1.id] };
+    g1.pinGroups = derivePinGroups(g1);
+    state.groups.push(g1);
+    if (name === "half") {
+      const C = addNode("OUTPUT", 620, 110); C.label = "C";
+      const S = addNode("OUTPUT", 620, 240); S.label = "S";
+      connect(a1.id, C.id, 0); connect(x1.id, S.id, 0);
+      render(); return;
+    }
+    const Cin = addNode("INPUT", 60, 470); Cin.label = "Cin";
+    const a2 = addNode("AND", 700, 340);
+    const x2 = addNode("XOR", 700, 470);
+    connect(Cin.id, a2.id, 0); connect(x1.id, a2.id, 1);
+    connect(x1.id, x2.id, 0); connect(Cin.id, x2.id, 1);
+    const g2 = { id: state.nextId++, name: "Half adder", members: [a2.id, x2.id] };
+    g2.pinGroups = derivePinGroups(g2);
+    state.groups.push(g2);
+    const or = addNode("OR", 980, 110);
+    connect(a1.id, or.id, 0); connect(a2.id, or.id, 1);
+    const Cout = addNode("OUTPUT", 1200, 120); Cout.label = "Cout";
+    const S = addNode("OUTPUT", 1200, 480); S.label = "S";
+    connect(or.id, Cout.id, 0); connect(x2.id, S.id, 0);
+    render();
+  }
+
+  // ---------- Persistence (per browser, best effort) ----------
+  function save() {
+    try {
+      localStorage.setItem("adder-workbench", JSON.stringify({
+        nodes: state.nodes, wires: state.wires, groups: state.groups, nextId: state.nextId, notation: state.notation, showMid: state.showMid, wireStyle: state.wireStyle,
+        rip: { width: state.rip.width, a: state.rip.a, b: state.rip.b }
+      }));
+    } catch (e) { /* storage unavailable */ }
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem("adder-workbench");
+      if (!raw) { return false; }
+      const data = JSON.parse(raw);
+      if (!data || !data.nodes) { return false; }
+      state.nodes = data.nodes; state.wires = data.wires || []; state.groups = data.groups || [];
+      state.nextId = data.nextId || 1; state.notation = data.notation || "ocr"; state.showMid = !!data.showMid;
+      if (data.rip && data.rip.a && data.rip.b && (data.rip.width === 4 || data.rip.width === 8)) {
+        state.rip.width = data.rip.width; state.rip.a = data.rip.a; state.rip.b = data.rip.b;
+      }
+      document.getElementById("notation").value = state.notation;
+      state.wireStyle = data.wireStyle === "square" ? "square" : "curved";
+      document.getElementById("wireStyle").value = state.wireStyle;
+      return true;
+    } catch (e) { return false; }
+  }
+
+  if (!load()) { loadPreset("start"); } else { render(); }
+})();
+</script>
+</body>
+</html>
